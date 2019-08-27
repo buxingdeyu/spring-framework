@@ -115,10 +115,13 @@ configure(allprojects.findAll { (it.name != "framework-bom") } ) { project ->
 	}
 
 	repositories {
-		mavenCentral()
-		maven { url "https://repo.spring.io/libs-release" }
-		maven { url "https://repo.spring.io/milestone" } // Reactor
 		mavenLocal()
+		maven { url "http://192.168.100.101:8081/repository/maven-public/" }
+		maven { url "http://maven.aliyun.com/nexus/content/groups/public/"}
+		jcenter()
+		maven { url "https://repo.spring.io/snapshot" }
+		maven { url "https://repo.spring.io/milestone" }
+		maven { url 'http://oss.jfrog.org/artifactory/oss-snapshot-local/' }
 	}
 
 	dependencies {
