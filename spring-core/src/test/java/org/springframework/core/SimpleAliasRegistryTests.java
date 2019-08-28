@@ -27,7 +27,7 @@ class SimpleAliasRegistryTests {
 
 	@Test
 	void aliasChaining() {
-		SimpleAliasRegistry registry = new SimpleAliasRegistry();
+ 		SimpleAliasRegistry registry = new SimpleAliasRegistry();
 		registry.registerAlias("test", "testAlias");
 		registry.registerAlias("testAlias", "testAlias2");
 		registry.registerAlias("testAlias2", "testAlias3");
