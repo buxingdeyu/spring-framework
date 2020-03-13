@@ -37,4 +37,5 @@ rootProject.children.each {project ->
 }
 include 'test001'
 include 'test002-factorybean-test'
+include 'test003'
 
