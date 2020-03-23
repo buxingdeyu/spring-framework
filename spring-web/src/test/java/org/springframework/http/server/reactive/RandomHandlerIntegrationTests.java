@@ -28,8 +28,9 @@ import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.server.reactive.bootstrap.HttpServer;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.testfixture.http.server.reactive.bootstrap.AbstractHttpHandlerIntegrationTests;
+import org.springframework.web.testfixture.http.server.reactive.bootstrap.HttpServer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -88,10 +89,8 @@ class RandomHandlerIntegrationTests extends AbstractHttpHandlerIntegrationTests 
 			Mono<Integer> requestSizeMono = request.getBody().
 					reduce(0, (integer, dataBuffer) -> integer +
 							dataBuffer.readableByteCount()).
-					doOnSuccessOrError((size, throwable) -> {
-						assertThat(throwable).isNull();
-						assertThat(size).isEqualTo(REQUEST_SIZE);
-					});
+					doOnNext(size -> assertThat(size).isEqualTo(REQUEST_SIZE)).
+					doOnError(throwable -> assertThat(throwable).isNull());
 
 			response.getHeaders().setContentLength(RESPONSE_SIZE);
 
@@ -112,4 +111,5 @@ class RandomHandlerIntegrationTests extends AbstractHttpHandlerIntegrationTests 
 		}
 
 	}
+
 }

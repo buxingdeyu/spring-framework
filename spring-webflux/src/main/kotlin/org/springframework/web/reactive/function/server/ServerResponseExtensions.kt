@@ -16,7 +16,6 @@
 
 package org.springframework.web.reactive.function.server
 
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.reactive.awaitSingle
 import org.reactivestreams.Publisher
@@ -32,7 +31,6 @@ import reactor.core.publisher.Mono
  * @author Sebastien Deleuze
  * @since 5.0
  */
-@Suppress("EXTENSION_SHADOWED_BY_MEMBER")
 inline fun <reified T : Any> ServerResponse.BodyBuilder.body(publisher: Publisher<T>): Mono<ServerResponse> =
 		body(publisher, object : ParameterizedTypeReference<T>() {})
 
@@ -43,7 +41,7 @@ inline fun <reified T : Any> ServerResponse.BodyBuilder.body(publisher: Publishe
  * @param producer the producer to write to the response. This must be a
  * [Publisher] or another producer adaptable to a
  * [Publisher] via [org.springframework.core.ReactiveAdapterRegistry]
- * @param <T> the type of the elements contained in the producer
+ * @param T the type of the elements contained in the producer
  * @author Sebastien Deleuze
  * @since 5.2
  */
@@ -51,17 +49,17 @@ inline fun <reified T : Any> ServerResponse.BodyBuilder.body(producer: Any): Mon
 		body(producer, object : ParameterizedTypeReference<T>() {})
 
 /**
- * Coroutines variant of [ServerResponse.BodyBuilder.body] with an [Any] parameter.
+ * Coroutines variant of [ServerResponse.BodyBuilder.bodyValue].
  *
  * Set the body of the response to the given {@code Object} and return it.
  * This convenience method combines [body] and
- * [org.springframework.web.reactive.function.BodyInserters.fromObject].
+ * [org.springframework.web.reactive.function.BodyInserters.fromValue].
  * @param body the body of the response
  * @return the built response
  * @throws IllegalArgumentException if `body` is a [Publisher] or an
  * instance of a type supported by [org.springframework.core.ReactiveAdapterRegistry.getSharedInstance],
  */
-suspend fun ServerResponse.BodyBuilder.bodyAndAwait(body: Any): ServerResponse =
+suspend fun ServerResponse.BodyBuilder.bodyValueAndAwait(body: Any): ServerResponse =
 		bodyValue(body).awaitSingle()
 
 /**
@@ -72,7 +70,6 @@ suspend fun ServerResponse.BodyBuilder.bodyAndAwait(body: Any): ServerResponse =
  * @author Sebastien Deleuze
  * @since 5.2
  */
-@ExperimentalCoroutinesApi
 suspend inline fun <reified T : Any> ServerResponse.BodyBuilder.bodyAndAwait(flow: Flow<T>): ServerResponse =
 		body(flow, object : ParameterizedTypeReference<T>() {}).awaitSingle()
 

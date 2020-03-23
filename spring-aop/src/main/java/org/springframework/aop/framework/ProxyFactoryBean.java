@@ -254,7 +254,7 @@ public class ProxyFactoryBean extends ProxyCreatorSupport
 			return getSingletonInstance();
 		}
 		else {
-			if (this.targetName == null) {
+			if (this.targetName == null && logger.isInfoEnabled()) {
 				logger.info("Using non-singleton proxies with singleton targets is often undesirable. " +
 						"Enable prototype proxies by setting the 'targetName' property.");
 			}
@@ -600,7 +600,7 @@ public class ProxyFactoryBean extends ProxyCreatorSupport
 			// We expected this to be an Advisor or Advice,
 			// but it wasn't. This is a configuration error.
 			throw new AopConfigException("Unknown advisor type " + next.getClass() +
-					"; Can only include Advisor or Advice type beans in interceptorNames chain except for last entry," +
+					"; Can only include Advisor or Advice type beans in interceptorNames chain except for last entry, " +
 					"which may also be target or TargetSource", ex);
 		}
 	}

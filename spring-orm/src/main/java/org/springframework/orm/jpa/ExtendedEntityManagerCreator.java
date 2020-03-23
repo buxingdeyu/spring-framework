@@ -24,6 +24,7 @@ import java.lang.reflect.Proxy;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
@@ -239,8 +240,7 @@ public abstract class ExtendedEntityManagerCreator {
 		}
 		else {
 			interfaces = cachedEntityManagerInterfaces.computeIfAbsent(rawEm.getClass(), key -> {
-				Set<Class<?>> ifcs = new LinkedHashSet<>();
-				ifcs.addAll(ClassUtils
+				Set<Class<?>> ifcs = new LinkedHashSet<>(ClassUtils
 						.getAllInterfacesForClassAsSet(key, cl));
 				ifcs.add(EntityManagerProxy.class);
 				return ClassUtils.toClassArray(ifcs);

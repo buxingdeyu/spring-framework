@@ -18,6 +18,10 @@ package org.springframework.util;
 
 import java.io.Externalizable;
 import java.io.Serializable;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -31,6 +35,9 @@ import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import org.springframework.tests.sample.objects.DerivedTestObject;
 import org.springframework.tests.sample.objects.ITestInterface;
@@ -40,14 +47,17 @@ import org.springframework.tests.sample.objects.TestObject;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
+ * Unit tests for {@link ClassUtils}.
+ *
  * @author Colin Sampaleanu
  * @author Juergen Hoeller
  * @author Rob Harrop
  * @author Rick Evans
+ * @author Sam Brannen
  */
 class ClassUtilsTests {
 
-	private ClassLoader classLoader = getClass().getClassLoader();
+	private final ClassLoader classLoader = getClass().getClassLoader();
 
 
 	@BeforeEach
@@ -144,6 +154,29 @@ class ClassUtilsTests {
 		assertThat(ClassUtils.isCacheSafe(composite, childLoader1)).isTrue();
 		assertThat(ClassUtils.isCacheSafe(composite, childLoader2)).isFalse();
 		assertThat(ClassUtils.isCacheSafe(composite, childLoader3)).isTrue();
+	}
+
+	@ParameterizedTest
+	@CsvSource({
+		"boolean, boolean",
+		"byte, byte",
+		"char, char",
+		"short, short",
+		"int, int",
+		"long, long",
+		"float, float",
+		"double, double",
+		"[Z, boolean[]",
+		"[B, byte[]",
+		"[C, char[]",
+		"[S, short[]",
+		"[I, int[]",
+		"[J, long[]",
+		"[F, float[]",
+		"[D, double[]"
+	})
+	void resolvePrimitiveClassName(String input, Class<?> output) {
+		assertThat(ClassUtils.resolvePrimitiveClassName(input)).isEqualTo(output);
 	}
 
 	@Test
@@ -380,6 +413,38 @@ class ClassUtilsTests {
 		assertThat(ClassUtils.determineCommonAncestor(String.class, List.class)).isNull();
 	}
 
+	@ParameterizedTest
+	@WrapperTypes
+	void isPrimitiveWrapper(Class<?> type) {
+		assertThat(ClassUtils.isPrimitiveWrapper(type)).isTrue();
+	}
+
+	@ParameterizedTest
+	@PrimitiveTypes
+	void isPrimitiveOrWrapperWithPrimitive(Class<?> type) {
+		assertThat(ClassUtils.isPrimitiveOrWrapper(type)).isTrue();
+	}
+
+	@ParameterizedTest
+	@WrapperTypes
+	void isPrimitiveOrWrapperWithWrapper(Class<?> type) {
+		assertThat(ClassUtils.isPrimitiveOrWrapper(type)).isTrue();
+	}
+
+
+	@Target(ElementType.METHOD)
+	@Retention(RetentionPolicy.RUNTIME)
+	@ValueSource(classes = { Boolean.class, Character.class, Byte.class, Short.class,
+		Integer.class, Long.class, Float.class, Double.class, Void.class })
+	@interface WrapperTypes {
+	}
+
+	@Target(ElementType.METHOD)
+	@Retention(RetentionPolicy.RUNTIME)
+	@ValueSource(classes = { boolean.class, char.class, byte.class, short.class,
+		int.class, long.class, float.class, double.class, void.class })
+	@interface PrimitiveTypes {
+	}
 
 	public static class InnerClass {
 

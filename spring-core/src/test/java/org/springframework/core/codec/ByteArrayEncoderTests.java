@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 
 import org.springframework.core.ResolvableType;
+import org.springframework.core.testfixture.codec.AbstractEncoderTests;
 import org.springframework.util.MimeTypeUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Arjen Poutsma
  */
-class ByteArrayEncoderTests extends AbstractEncoderTestCase<ByteArrayEncoder> {
+class ByteArrayEncoderTests extends AbstractEncoderTests<ByteArrayEncoder> {
 
 	private final byte[] fooBytes = "foo".getBytes(StandardCharsets.UTF_8);
 

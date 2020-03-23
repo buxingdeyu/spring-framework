@@ -21,7 +21,7 @@ import java.io.UnsupportedEncodingException;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.mock.web.test.MockHttpServletRequest;
+import org.springframework.web.testfixture.servlet.MockHttpServletRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -300,8 +300,9 @@ public class UrlPathHelperTests {
 		assertThat(helper.getLookupPathForRequest(request)).isEqualTo("/");
 	}
 
+	@Disabled
 	// test the root mapping for /foo/* w/o a trailing slash - <host>/<context>/foo
-	@Test @Disabled
+	@Test
 	public void tomcatCasualServletRootWithMissingSlash() throws Exception {
 		request.setContextPath("/test");
 		request.setPathInfo(null);
@@ -348,8 +349,8 @@ public class UrlPathHelperTests {
 		tomcatCasualServletRoot();
 	}
 
-	// test the root mapping for /foo/* w/o a trailing slash - <host>/<context>/foo
 	@Disabled
+	// test the root mapping for /foo/* w/o a trailing slash - <host>/<context>/foo
 	@Test
 	public void wasCasualServletRootWithMissingSlash() throws Exception {
 		request.setContextPath("/test");

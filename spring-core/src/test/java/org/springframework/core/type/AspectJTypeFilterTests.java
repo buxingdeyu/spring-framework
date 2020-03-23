@@ -16,6 +16,7 @@
 
 package org.springframework.core.type;
 
+import example.type.AspectJTypeFilterTestsTypes;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.core.type.classreading.MetadataReader;
@@ -87,7 +88,7 @@ class AspectJTypeFilterTests {
 	@Test
 	void annotationPatternMatches() throws Exception {
 		assertMatch("example.type.AspectJTypeFilterTestsTypes$SomeClassAnnotatedWithComponent",
-				"@org.springframework.stereotype.Component *..*");
+				"@org.springframework.core.testfixture.stereotype.Component *..*");
 		assertMatch("example.type.AspectJTypeFilterTestsTypes$SomeClassAnnotatedWithComponent",
 				"@* *..*");
 		assertMatch("example.type.AspectJTypeFilterTestsTypes$SomeClassAnnotatedWithComponent",
@@ -95,9 +96,9 @@ class AspectJTypeFilterTests {
 		assertMatch("example.type.AspectJTypeFilterTestsTypes$SomeClassAnnotatedWithComponent",
 				"@*..*Component *..*");
 		assertMatch("example.type.AspectJTypeFilterTestsTypes$SomeClassAnnotatedWithComponent",
-				"@org.springframework.stereotype.Component *..*Component");
+				"@org.springframework.core.testfixture.stereotype.Component *..*Component");
 		assertMatch("example.type.AspectJTypeFilterTestsTypes$SomeClassAnnotatedWithComponent",
-				"@org.springframework.stereotype.Component *");
+				"@org.springframework.core.testfixture.stereotype.Component *");
 	}
 
 	@Test

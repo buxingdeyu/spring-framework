@@ -17,10 +17,12 @@
 package org.springframework.test.web.servlet.result;
 
 import java.util.Map;
+
 import javax.xml.xpath.XPathExpressionException;
 
 import org.hamcrest.Matcher;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import org.springframework.lang.Nullable;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -65,6 +67,18 @@ public class XpathResultMatchers {
 		return result -> {
 			MockHttpServletResponse response = result.getResponse();
 			this.xpathHelper.assertNode(response.getContentAsByteArray(), getDefinedEncoding(response), matcher);
+		};
+	}
+
+	/**
+	 * Evaluate the XPath and assert the {@link NodeList} content found with the
+	 * given Hamcrest {@link Matcher}.
+	 * @since 5.2.2
+	 */
+	public ResultMatcher nodeList(Matcher<? super NodeList> matcher) {
+		return result -> {
+			MockHttpServletResponse response = result.getResponse();
+			this.xpathHelper.assertNodeList(response.getContentAsByteArray(), getDefinedEncoding(response), matcher);
 		};
 	}
 

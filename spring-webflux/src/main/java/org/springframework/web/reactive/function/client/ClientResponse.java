@@ -41,17 +41,32 @@ import org.springframework.web.reactive.function.BodyExtractor;
 
 /**
  * Represents an HTTP response, as returned by {@link WebClient} and also
- * {@link ExchangeFunction}. Provides access to the response status and headers,
- * and also methods to consume the response body.
+ * {@link ExchangeFunction}. Provides access to the response status and
+ * headers, and also methods to consume the response body.
  *
- * <p><strong>NOTE:</strong> When given access to a {@link ClientResponse},
+ * <p><strong>NOTE:</strong> When using a {@link ClientResponse}
  * through the {@code WebClient}
  * {@link WebClient.RequestHeadersSpec#exchange() exchange()} method,
- * you must always use one of the body or toEntity methods to ensure resources
- * are released and avoid potential issues with HTTP connection pooling.
- * You can use {@code bodyToMono(Void.class)} if no response content is
- * expected. However keep in mind that if the response does have content, the
- * connection will be closed and will not be placed back in the pool.
+ * you have to make sure that the body is consumed or released by using
+ * one of the following methods:
+ * <ul>
+ * <li>{@link #body(BodyExtractor)}</li>
+ * <li>{@link #bodyToMono(Class)} or
+ *     {@link #bodyToMono(ParameterizedTypeReference)}</li>
+ * <li>{@link #bodyToFlux(Class)} or
+ *     {@link #bodyToFlux(ParameterizedTypeReference)}</li>
+ * <li>{@link #toEntity(Class)} or
+ *     {@link #toEntity(ParameterizedTypeReference)}</li>
+ * <li>{@link #toEntityList(Class)} or
+ *     {@link #toEntityList(ParameterizedTypeReference)}</li>
+*  <li>{@link #toBodilessEntity()}</li>
+ * <li>{@link #releaseBody()}</li>
+ * </ul>
+ * You can also use {@code bodyToMono(Void.class)} if no response content is
+ * expected. However keep in mind the connection will be closed, instead of
+ * being placed back in the pool, if any content does arrive. This is in
+ * contrast to {@link #releaseBody()} which does consume the full body and
+ * releases any content received.
  *
  * @author Brian Clozel
  * @author Arjen Poutsma
@@ -133,6 +148,14 @@ public interface ClientResponse {
 	<T> Flux<T> bodyToFlux(ParameterizedTypeReference<T> elementTypeRef);
 
 	/**
+	 * Releases the body of this response.
+	 * @return a completion signal
+	 * @since 5.2
+	 * @see org.springframework.core.io.buffer.DataBufferUtils#release(DataBuffer)
+	 */
+	Mono<Void> releaseBody();
+
+	/**
 	 * Return this response as a delayed {@code ResponseEntity}.
 	 * @param bodyClass the expected response body type
 	 * @param <T> response body type
@@ -165,12 +188,32 @@ public interface ClientResponse {
 	<T> Mono<ResponseEntity<List<T>>> toEntityList(ParameterizedTypeReference<T> elementTypeRef);
 
 	/**
+	 * Return this response as a delayed {@code ResponseEntity} containing
+	 * status and headers, but no body. Calling this method will
+	 * {@linkplain #releaseBody() release} the body of the response.
+	 * @return {@code Mono} with the bodiless {@code ResponseEntity}
+	 * @since 5.2
+	 */
+	Mono<ResponseEntity<Void>> toBodilessEntity();
+
+	/**
 	 * Creates a {@link WebClientResponseException} based on the status code,
 	 * headers, and body of this response as well as the corresponding request.
 	 * @return a {@code Mono} with a {@code WebClientResponseException} based on this response
 	 * @since 5.2
 	 */
 	Mono<WebClientResponseException> createException();
+
+	/**
+	 * Return a log message prefix to use to correlate messages for this exchange.
+	 * The prefix is based on {@linkplain ClientRequest#logPrefix()}, which
+	 * itself is based on the value of the {@link ClientRequest#LOG_ID_ATTRIBUTE
+	 * LOG_ID_ATTRIBUTE} request attribute, further surrounded with "[" and "]".
+	 * @return the log message prefix or an empty String if the
+	 * {@link ClientRequest#LOG_ID_ATTRIBUTE LOG_ID_ATTRIBUTE} is not set.
+	 * @since 5.2.3
+	 */
+	String logPrefix();
 
 
 	// Static builder methods

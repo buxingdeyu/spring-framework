@@ -18,6 +18,7 @@ package org.springframework.oxm;
 
 import java.io.ByteArrayOutputStream;
 import java.io.StringWriter;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.stream.XMLEventWriter;
@@ -35,7 +36,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Text;
 
-import org.springframework.tests.XmlContent;
+import org.springframework.core.testfixture.xml.XmlContent;
 import org.springframework.util.xml.StaxUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;

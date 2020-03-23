@@ -19,6 +19,7 @@ package org.springframework.web.servlet.function;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 
@@ -27,7 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.mock.web.test.MockHttpServletRequest;
+import org.springframework.web.testfixture.servlet.MockHttpServletRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

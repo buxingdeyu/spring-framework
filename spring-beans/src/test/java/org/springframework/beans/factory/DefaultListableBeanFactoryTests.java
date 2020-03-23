@@ -38,12 +38,13 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import javax.annotation.Priority;
 import javax.security.auth.Subject;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
@@ -61,7 +62,6 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanExpressionContext;
 import org.springframework.beans.factory.config.BeanExpressionResolver;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
 import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessorAdapter;
 import org.springframework.beans.factory.config.PropertiesFactoryBean;
@@ -78,6 +78,14 @@ import org.springframework.beans.factory.support.PropertiesBeanDefinitionReader;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.beans.factory.xml.ConstructorDependenciesBean;
 import org.springframework.beans.propertyeditors.CustomNumberEditor;
+import org.springframework.beans.testfixture.beans.DependenciesBean;
+import org.springframework.beans.testfixture.beans.DerivedTestBean;
+import org.springframework.beans.testfixture.beans.ITestBean;
+import org.springframework.beans.testfixture.beans.LifecycleBean;
+import org.springframework.beans.testfixture.beans.NestedTestBean;
+import org.springframework.beans.testfixture.beans.SideEffectBean;
+import org.springframework.beans.testfixture.beans.TestBean;
+import org.springframework.beans.testfixture.beans.factory.DummyFactory;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
@@ -86,19 +94,12 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.core.testfixture.Assume;
+import org.springframework.core.testfixture.EnabledForTestGroups;
+import org.springframework.core.testfixture.TestGroup;
+import org.springframework.core.testfixture.io.SerializationTestUtils;
+import org.springframework.core.testfixture.security.TestPrincipal;
 import org.springframework.lang.Nullable;
-import org.springframework.tests.Assume;
-import org.springframework.tests.EnabledForTestGroups;
-import org.springframework.tests.TestGroup;
-import org.springframework.tests.sample.beans.DependenciesBean;
-import org.springframework.tests.sample.beans.DerivedTestBean;
-import org.springframework.tests.sample.beans.ITestBean;
-import org.springframework.tests.sample.beans.LifecycleBean;
-import org.springframework.tests.sample.beans.NestedTestBean;
-import org.springframework.tests.sample.beans.SideEffectBean;
-import org.springframework.tests.sample.beans.TestBean;
-import org.springframework.tests.sample.beans.factory.DummyFactory;
-import org.springframework.util.SerializationTestUtils;
 import org.springframework.util.StopWatch;
 import org.springframework.util.StringValueResolver;
 
@@ -125,7 +126,7 @@ import static org.mockito.Mockito.verify;
  * @author Phillip Webb
  * @author Stephane Nicoll
  */
-public class DefaultListableBeanFactoryTests {
+class DefaultListableBeanFactoryTests {
 
 	private static final Log factoryLog = LogFactory.getLog(DefaultListableBeanFactory.class);
 
@@ -133,7 +134,7 @@ public class DefaultListableBeanFactoryTests {
 
 
 	@Test
-	public void testUnreferencedSingletonWasInstantiated() {
+	void unreferencedSingletonWasInstantiated() {
 		KnowsIfInstantiated.clearInstantiationRecord();
 		Properties p = new Properties();
 		p.setProperty("x1.(class)", KnowsIfInstantiated.class.getName());
@@ -144,7 +145,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testLazyInitialization() {
+	void lazyInitialization() {
 		KnowsIfInstantiated.clearInstantiationRecord();
 		Properties p = new Properties();
 		p.setProperty("x1.(class)", KnowsIfInstantiated.class.getName());
@@ -160,7 +161,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testFactoryBeanDidNotCreatePrototype() {
+	void factoryBeanDidNotCreatePrototype() {
 		Properties p = new Properties();
 		p.setProperty("x1.(class)", DummyFactory.class.getName());
 		// Reset static state
@@ -181,7 +182,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testPrototypeFactoryBeanIgnoredByNonEagerTypeMatching() {
+	void prototypeFactoryBeanIgnoredByNonEagerTypeMatching() {
 		Properties p = new Properties();
 		p.setProperty("x1.(class)", DummyFactory.class.getName());
 		// Reset static state
@@ -215,7 +216,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testSingletonFactoryBeanIgnoredByNonEagerTypeMatching() {
+	void singletonFactoryBeanIgnoredByNonEagerTypeMatching() {
 		Properties p = new Properties();
 		p.setProperty("x1.(class)", DummyFactory.class.getName());
 		// Reset static state
@@ -249,7 +250,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testNonInitializedFactoryBeanIgnoredByNonEagerTypeMatching() {
+	void nonInitializedFactoryBeanIgnoredByNonEagerTypeMatching() {
 		Properties p = new Properties();
 		p.setProperty("x1.(class)", DummyFactory.class.getName());
 		// Reset static state
@@ -282,7 +283,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testInitializedFactoryBeanFoundByNonEagerTypeMatching() {
+	void initializedFactoryBeanFoundByNonEagerTypeMatching() {
 		Properties p = new Properties();
 		p.setProperty("x1.(class)", DummyFactory.class.getName());
 		// Reset static state
@@ -340,7 +341,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testStaticFactoryMethodFoundByNonEagerTypeMatching() {
+	void staticFactoryMethodFoundByNonEagerTypeMatching() {
 		RootBeanDefinition rbd = new RootBeanDefinition(TestBeanFactory.class);
 		rbd.setFactoryMethodName("createTestBean");
 		lbf.registerBeanDefinition("x1", rbd);
@@ -364,9 +365,9 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testStaticPrototypeFactoryMethodFoundByNonEagerTypeMatching() {
+	void staticPrototypeFactoryMethodFoundByNonEagerTypeMatching() {
 		RootBeanDefinition rbd = new RootBeanDefinition(TestBeanFactory.class);
-		rbd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+		rbd.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		rbd.setFactoryMethodName("createTestBean");
 		lbf.registerBeanDefinition("x1", rbd);
 
@@ -389,7 +390,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testNonStaticFactoryMethodFoundByNonEagerTypeMatching() {
+	void nonStaticFactoryMethodFoundByNonEagerTypeMatching() {
 		RootBeanDefinition factoryBd = new RootBeanDefinition(TestBeanFactory.class);
 		lbf.registerBeanDefinition("factory", factoryBd);
 		RootBeanDefinition rbd = new RootBeanDefinition(TestBeanFactory.class);
@@ -416,13 +417,13 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testNonStaticPrototypeFactoryMethodFoundByNonEagerTypeMatching() {
+	void nonStaticPrototypeFactoryMethodFoundByNonEagerTypeMatching() {
 		RootBeanDefinition factoryBd = new RootBeanDefinition(TestBeanFactory.class);
 		lbf.registerBeanDefinition("factory", factoryBd);
 		RootBeanDefinition rbd = new RootBeanDefinition();
 		rbd.setFactoryBeanName("factory");
 		rbd.setFactoryMethodName("createTestBeanNonStatic");
-		rbd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+		rbd.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		lbf.registerBeanDefinition("x1", rbd);
 
 		TestBeanFactory.initialized = false;
@@ -472,7 +473,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testEmpty() {
+	void empty() {
 		ListableBeanFactory lbf = new DefaultListableBeanFactory();
 		assertThat(lbf.getBeanDefinitionNames() != null).as("No beans defined --> array != null").isTrue();
 		assertThat(lbf.getBeanDefinitionNames().length == 0).as("No beans defined after no arg constructor").isTrue();
@@ -480,14 +481,14 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testEmptyPropertiesPopulation() {
+	void emptyPropertiesPopulation() {
 		Properties p = new Properties();
 		(new PropertiesBeanDefinitionReader(lbf)).registerBeanDefinitions(p);
 		assertThat(lbf.getBeanDefinitionCount() == 0).as("No beans defined after ignorable invalid").isTrue();
 	}
 
 	@Test
-	public void testHarmlessIgnorableRubbish() {
+	void harmlessIgnorableRubbish() {
 		Properties p = new Properties();
 		p.setProperty("foo", "bar");
 		p.setProperty("qwert", "er");
@@ -496,18 +497,18 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testPropertiesPopulationWithNullPrefix() {
+	void propertiesPopulationWithNullPrefix() {
 		Properties p = new Properties();
 		p.setProperty("test.(class)", TestBean.class.getName());
 		p.setProperty("test.name", "Tony");
 		p.setProperty("test.age", "48");
 		int count = (new PropertiesBeanDefinitionReader(lbf)).registerBeanDefinitions(p);
 		assertThat(count == 1).as("1 beans registered, not " + count).isTrue();
-		testSingleTestBean(lbf);
+		singleTestBean(lbf);
 	}
 
 	@Test
-	public void testPropertiesPopulationWithPrefix() {
+	void propertiesPopulationWithPrefix() {
 		String PREFIX = "beans.";
 		Properties p = new Properties();
 		p.setProperty(PREFIX + "test.(class)", TestBean.class.getName());
@@ -515,11 +516,11 @@ public class DefaultListableBeanFactoryTests {
 		p.setProperty(PREFIX + "test.age", "0x30");
 		int count = (new PropertiesBeanDefinitionReader(lbf)).registerBeanDefinitions(p, PREFIX);
 		assertThat(count == 1).as("1 beans registered, not " + count).isTrue();
-		testSingleTestBean(lbf);
+		singleTestBean(lbf);
 	}
 
 	@Test
-	public void testSimpleReference() {
+	void simpleReference() {
 		String PREFIX = "beans.";
 		Properties p = new Properties();
 
@@ -542,7 +543,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testPropertiesWithDotsInKey() {
+	void propertiesWithDotsInKey() {
 		Properties p = new Properties();
 
 		p.setProperty("tb.(class)", TestBean.class.getName());
@@ -557,7 +558,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testUnresolvedReference() {
+	void unresolvedReference() {
 		String PREFIX = "beans.";
 		Properties p = new Properties();
 
@@ -572,7 +573,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testSelfReference() {
+	void selfReference() {
 		MutablePropertyValues pvs = new MutablePropertyValues();
 		pvs.add("spouse", new RuntimeBeanReference("self"));
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
@@ -584,7 +585,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testReferenceByName() {
+	void referenceByName() {
 		MutablePropertyValues pvs = new MutablePropertyValues();
 		pvs.add("doctor", new RuntimeBeanReference("doc"));
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
@@ -597,7 +598,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testReferenceByType() {
+	void referenceByType() {
 		MutablePropertyValues pvs = new MutablePropertyValues();
 		pvs.add("doctor", new RuntimeBeanReference(NestedTestBean.class));
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
@@ -610,7 +611,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testReferenceByAutowire() {
+	void referenceByAutowire() {
 		MutablePropertyValues pvs = new MutablePropertyValues();
 		pvs.add("doctor", AutowiredPropertyMarker.INSTANCE);
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
@@ -623,7 +624,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testArrayReferenceByName() {
+	void arrayReferenceByName() {
 		MutablePropertyValues pvs = new MutablePropertyValues();
 		pvs.add("stringArray", new RuntimeBeanReference("string"));
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
@@ -637,7 +638,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testArrayReferenceByType() {
+	void arrayReferenceByType() {
 		MutablePropertyValues pvs = new MutablePropertyValues();
 		pvs.add("stringArray", new RuntimeBeanReference(String.class));
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
@@ -651,7 +652,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testArrayReferenceByAutowire() {
+	void arrayReferenceByAutowire() {
 		MutablePropertyValues pvs = new MutablePropertyValues();
 		pvs.add("stringArray", AutowiredPropertyMarker.INSTANCE);
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
@@ -667,7 +668,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testPossibleMatches() {
+	void possibleMatches() {
 		MutablePropertyValues pvs = new MutablePropertyValues();
 		pvs.add("ag", "foobar");
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
@@ -685,7 +686,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testPrototype() {
+	void prototype() {
 		Properties p = new Properties();
 		p.setProperty("kerry.(class)", TestBean.class.getName());
 		p.setProperty("kerry.age", "35");
@@ -719,7 +720,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testPrototypeCircleLeadsToException() {
+	void prototypeCircleLeadsToException() {
 		Properties p = new Properties();
 		p.setProperty("kerry.(class)", TestBean.class.getName());
 		p.setProperty("kerry.(singleton)", "false");
@@ -737,7 +738,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testPrototypeExtendsPrototype() {
+	void prototypeExtendsPrototype() {
 		Properties p = new Properties();
 		p.setProperty("wife.(class)", TestBean.class.getName());
 		p.setProperty("wife.name", "kerry");
@@ -779,7 +780,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testCanReferenceParentBeanFromChildViaAlias() {
+	void canReferenceParentBeanFromChildViaAlias() {
 		final String EXPECTED_NAME = "Juergen";
 		final int EXPECTED_AGE = 41;
 
@@ -804,7 +805,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testGetTypeWorksAfterParentChildMerging() {
+	void getTypeWorksAfterParentChildMerging() {
 		RootBeanDefinition parentDefinition = new RootBeanDefinition(TestBean.class);
 		ChildBeanDefinition childDefinition = new ChildBeanDefinition("parent", DerivedTestBean.class, null, null);
 
@@ -818,7 +819,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testNameAlreadyBound() {
+	void nameAlreadyBound() {
 		Properties p = new Properties();
 		p.setProperty("kerry.(class)", TestBean.class.getName());
 		p.setProperty("kerry.age", "35");
@@ -832,7 +833,7 @@ public class DefaultListableBeanFactoryTests {
 		}
 	}
 
-	private void testSingleTestBean(ListableBeanFactory lbf) {
+	private void singleTestBean(ListableBeanFactory lbf) {
 		assertThat(lbf.getBeanDefinitionCount() == 1).as("1 beans defined").isTrue();
 		String[] names = lbf.getBeanDefinitionNames();
 		assertThat(names != lbf.getBeanDefinitionNames()).isTrue();
@@ -845,7 +846,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAliasCircle() {
+	void aliasCircle() {
 		lbf.registerAlias("test", "test2");
 		lbf.registerAlias("test2", "test3");
 		assertThatIllegalStateException().isThrownBy(() ->
@@ -856,56 +857,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testBeanDefinitionOverriding() {
-		lbf.registerBeanDefinition("test", new RootBeanDefinition(TestBean.class));
-		lbf.registerBeanDefinition("test", new RootBeanDefinition(NestedTestBean.class));
-		lbf.registerAlias("otherTest", "test2");
-		lbf.registerAlias("test", "test2");
-		assertThat(lbf.getBean("test") instanceof NestedTestBean).isTrue();
-		assertThat(lbf.getBean("test2") instanceof NestedTestBean).isTrue();
-	}
-
-	@Test
-	public void testBeanDefinitionRemoval() {
-		lbf.setAllowBeanDefinitionOverriding(false);
-		lbf.registerBeanDefinition("test", new RootBeanDefinition(TestBean.class));
-		lbf.registerAlias("test", "test2");
-		lbf.preInstantiateSingletons();
-		lbf.removeBeanDefinition("test");
-		lbf.removeAlias("test2");
-		lbf.registerBeanDefinition("test", new RootBeanDefinition(NestedTestBean.class));
-		lbf.registerAlias("test", "test2");
-		assertThat(lbf.getBean("test") instanceof NestedTestBean).isTrue();
-		assertThat(lbf.getBean("test2") instanceof NestedTestBean).isTrue();
-	}
-
-	@Test
-	public void testBeanDefinitionOverridingNotAllowed() {
-		lbf.setAllowBeanDefinitionOverriding(false);
-		BeanDefinition oldDef = new RootBeanDefinition(TestBean.class);
-		BeanDefinition newDef = new RootBeanDefinition(NestedTestBean.class);
-		lbf.registerBeanDefinition("test", oldDef);
-		assertThatExceptionOfType(BeanDefinitionOverrideException.class).isThrownBy(() ->
-				lbf.registerBeanDefinition("test", newDef))
-			.satisfies(ex -> {
-				assertThat(ex.getBeanName()).isEqualTo("test");
-				assertThat(ex.getBeanDefinition()).isEqualTo(newDef);
-				assertThat(ex.getExistingDefinition()).isEqualTo(oldDef);
-			});
-	}
-
-	@Test
-	public void testBeanDefinitionOverridingWithAlias() {
-		lbf.registerBeanDefinition("test", new RootBeanDefinition(TestBean.class));
-		lbf.registerAlias("test", "testAlias");
-		lbf.registerBeanDefinition("test", new RootBeanDefinition(NestedTestBean.class));
-		lbf.registerAlias("test", "testAlias");
-		assertThat(lbf.getBean("test") instanceof NestedTestBean).isTrue();
-		assertThat(lbf.getBean("testAlias") instanceof NestedTestBean).isTrue();
-	}
-
-	@Test
-	public void testAliasChaining() {
+	void aliasChaining() {
 		lbf.registerBeanDefinition("test", new RootBeanDefinition(NestedTestBean.class));
 		lbf.registerAlias("test", "testAlias");
 		lbf.registerAlias("testAlias", "testAlias2");
@@ -917,7 +869,96 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testBeanReferenceWithNewSyntax() {
+	void beanDefinitionOverriding() {
+		lbf.registerBeanDefinition("test", new RootBeanDefinition(TestBean.class));
+		lbf.registerBeanDefinition("test", new RootBeanDefinition(NestedTestBean.class));
+		lbf.registerAlias("otherTest", "test2");
+		lbf.registerAlias("test", "test2");
+		assertThat(lbf.getBean("test")).isInstanceOf(NestedTestBean.class);
+		assertThat(lbf.getBean("test2")).isInstanceOf(NestedTestBean.class);
+	}
+
+	@Test
+	void beanDefinitionOverridingNotAllowed() {
+		lbf.setAllowBeanDefinitionOverriding(false);
+		BeanDefinition oldDef = new RootBeanDefinition(TestBean.class);
+		BeanDefinition newDef = new RootBeanDefinition(NestedTestBean.class);
+		lbf.registerBeanDefinition("test", oldDef);
+		assertThatExceptionOfType(BeanDefinitionOverrideException.class).isThrownBy(() ->
+				lbf.registerBeanDefinition("test", newDef))
+				.satisfies(ex -> {
+					assertThat(ex.getBeanName()).isEqualTo("test");
+					assertThat(ex.getBeanDefinition()).isEqualTo(newDef);
+					assertThat(ex.getExistingDefinition()).isEqualTo(oldDef);
+				});
+	}
+
+	@Test
+	void beanDefinitionOverridingWithAlias() {
+		lbf.registerBeanDefinition("test", new RootBeanDefinition(TestBean.class));
+		lbf.registerAlias("test", "testAlias");
+		lbf.registerBeanDefinition("test", new RootBeanDefinition(NestedTestBean.class));
+		lbf.registerAlias("test", "testAlias");
+		assertThat(lbf.getBean("test")).isInstanceOf(NestedTestBean.class);
+		assertThat(lbf.getBean("testAlias")).isInstanceOf(NestedTestBean.class);
+	}
+
+	@Test
+	void beanDefinitionOverridingWithConstructorArgumentMismatch() {
+		RootBeanDefinition bd1 = new RootBeanDefinition(NestedTestBean.class);
+		bd1.getConstructorArgumentValues().addIndexedArgumentValue(1, "value1");
+		lbf.registerBeanDefinition("test", bd1);
+		RootBeanDefinition bd2 = new RootBeanDefinition(NestedTestBean.class);
+		bd2.getConstructorArgumentValues().addIndexedArgumentValue(0, "value0");
+		lbf.registerBeanDefinition("test", bd2);
+		assertThat(lbf.getBean("test")).isInstanceOf(NestedTestBean.class);
+		assertThat(lbf.getBean("test", NestedTestBean.class).getCompany()).isEqualTo("value0");
+	}
+
+	@Test
+	void beanDefinitionRemoval() {
+		lbf.setAllowBeanDefinitionOverriding(false);
+		lbf.registerBeanDefinition("test", new RootBeanDefinition(TestBean.class));
+		lbf.registerAlias("test", "test2");
+		lbf.preInstantiateSingletons();
+		assertThat(lbf.getBean("test")).isInstanceOf(TestBean.class);
+		assertThat(lbf.getBean("test2")).isInstanceOf(TestBean.class);
+		lbf.removeBeanDefinition("test");
+		lbf.removeAlias("test2");
+		lbf.registerBeanDefinition("test", new RootBeanDefinition(NestedTestBean.class));
+		lbf.registerAlias("test", "test2");
+		assertThat(lbf.getBean("test")).isInstanceOf(NestedTestBean.class);
+		assertThat(lbf.getBean("test2")).isInstanceOf(NestedTestBean.class);
+	}
+
+	@Test // gh-23542
+	void concurrentBeanDefinitionRemoval() {
+		final int MAX = 200;
+		lbf.setAllowBeanDefinitionOverriding(false);
+
+		// Register the bean definitions before invoking preInstantiateSingletons()
+		// to simulate realistic usage of an ApplicationContext; otherwise, the bean
+		// factory thinks it's an "empty" factory which causes this test to fail in
+		// an unrealistic manner.
+		IntStream.range(0, MAX).forEach(this::registerTestBean);
+		lbf.preInstantiateSingletons();
+
+		// This test is considered successful if the following does not result in an exception.
+		IntStream.range(0, MAX).parallel().forEach(this::removeTestBean);
+	}
+
+	private void registerTestBean(int i) {
+		String name = "test" + i;
+		lbf.registerBeanDefinition(name, new RootBeanDefinition(TestBean.class));
+	}
+
+	private void removeTestBean(int i) {
+		String name = "test" + i;
+		lbf.removeBeanDefinition(name);
+	}
+
+	@Test
+	void beanReferenceWithNewSyntax() {
 		Properties p = new Properties();
 		p.setProperty("r.(class)", TestBean.class.getName());
 		p.setProperty("r.name", "rod");
@@ -931,7 +972,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testCanEscapeBeanReferenceSyntax() {
+	void canEscapeBeanReferenceSyntax() {
 		String name = "*name";
 		Properties p = new Properties();
 		p.setProperty("r.(class)", TestBean.class.getName());
@@ -942,13 +983,10 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testCustomEditor() {
-		lbf.addPropertyEditorRegistrar(new PropertyEditorRegistrar() {
-			@Override
-			public void registerCustomEditors(PropertyEditorRegistry registry) {
+	void customEditor() {
+		lbf.addPropertyEditorRegistrar(registry -> {
 				NumberFormat nf = NumberFormat.getInstance(Locale.GERMAN);
 				registry.registerCustomEditor(Float.class, new CustomNumberEditor(Float.class, nf, true));
-			}
 		});
 		MutablePropertyValues pvs = new MutablePropertyValues();
 		pvs.add("myFloat", "1,1");
@@ -960,7 +998,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testCustomConverter() {
+	void customConverter() {
 		GenericConversionService conversionService = new DefaultConversionService();
 		conversionService.addConverter(new Converter<String, Float>() {
 			@Override
@@ -985,7 +1023,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testCustomEditorWithBeanReference() {
+	void customEditorWithBeanReference() {
 		lbf.addPropertyEditorRegistrar(new PropertyEditorRegistrar() {
 			@Override
 			public void registerCustomEditors(PropertyEditorRegistry registry) {
@@ -1004,7 +1042,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testCustomTypeConverter() {
+	void customTypeConverter() {
 		NumberFormat nf = NumberFormat.getInstance(Locale.GERMAN);
 		lbf.setTypeConverter(new CustomTypeConverter(nf));
 		MutablePropertyValues pvs = new MutablePropertyValues();
@@ -1020,7 +1058,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testCustomTypeConverterWithBeanReference() {
+	void customTypeConverterWithBeanReference() {
 		NumberFormat nf = NumberFormat.getInstance(Locale.GERMAN);
 		lbf.setTypeConverter(new CustomTypeConverter(nf));
 		MutablePropertyValues pvs = new MutablePropertyValues();
@@ -1037,7 +1075,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testRegisterExistingSingletonWithReference() {
+	void registerExistingSingletonWithReference() {
 		Properties p = new Properties();
 		p.setProperty("test.(class)", TestBean.class.getName());
 		p.setProperty("test.name", "Tony");
@@ -1073,7 +1111,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testRegisterExistingSingletonWithNameOverriding() {
+	void registerExistingSingletonWithNameOverriding() {
 		Properties p = new Properties();
 		p.setProperty("test.(class)", TestBean.class.getName());
 		p.setProperty("test.name", "Tony");
@@ -1111,7 +1149,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testRegisterExistingSingletonWithAutowire() {
+	void registerExistingSingletonWithAutowire() {
 		MutablePropertyValues pvs = new MutablePropertyValues();
 		pvs.add("name", "Tony");
 		pvs.add("age", "48");
@@ -1133,7 +1171,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testRegisterExistingSingletonWithAlreadyBound() {
+	void registerExistingSingletonWithAlreadyBound() {
 		Object singletonObject = new TestBean();
 		lbf.registerSingleton("singletonObject", singletonObject);
 		assertThatIllegalStateException().isThrownBy(() ->
@@ -1141,19 +1179,19 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testReregisterBeanDefinition() {
+	void reregisterBeanDefinition() {
 		RootBeanDefinition bd1 = new RootBeanDefinition(TestBean.class);
-		bd1.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+		bd1.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		lbf.registerBeanDefinition("testBean", bd1);
-		assertThat(lbf.getBean("testBean") instanceof TestBean).isTrue();
+		assertThat(lbf.getBean("testBean")).isInstanceOf(TestBean.class);
 		RootBeanDefinition bd2 = new RootBeanDefinition(NestedTestBean.class);
-		bd2.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+		bd2.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		lbf.registerBeanDefinition("testBean", bd2);
-		assertThat(lbf.getBean("testBean") instanceof NestedTestBean).isTrue();
+		assertThat(lbf.getBean("testBean")).isInstanceOf(NestedTestBean.class);
 	}
 
 	@Test
-	public void testArrayPropertyWithAutowiring() throws MalformedURLException {
+	void arrayPropertyWithAutowiring() throws MalformedURLException {
 		lbf.registerSingleton("resource1", new UrlResource("http://localhost:8080"));
 		lbf.registerSingleton("resource2", new UrlResource("http://localhost:9090"));
 
@@ -1167,7 +1205,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testArrayPropertyWithOptionalAutowiring() throws MalformedURLException {
+	void arrayPropertyWithOptionalAutowiring() throws MalformedURLException {
 		RootBeanDefinition rbd = new RootBeanDefinition(ArrayBean.class);
 		rbd.setAutowireMode(RootBeanDefinition.AUTOWIRE_BY_TYPE);
 		lbf.registerBeanDefinition("arrayBean", rbd);
@@ -1177,7 +1215,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testArrayConstructorWithAutowiring() {
+	void arrayConstructorWithAutowiring() {
 		lbf.registerSingleton("integer1", new Integer(4));
 		lbf.registerSingleton("integer2", new Integer(5));
 
@@ -1191,7 +1229,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testArrayConstructorWithOptionalAutowiring() {
+	void arrayConstructorWithOptionalAutowiring() {
 		RootBeanDefinition rbd = new RootBeanDefinition(ArrayBean.class);
 		rbd.setAutowireMode(RootBeanDefinition.AUTOWIRE_CONSTRUCTOR);
 		lbf.registerBeanDefinition("arrayBean", rbd);
@@ -1201,7 +1239,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testDoubleArrayConstructorWithAutowiring() throws MalformedURLException {
+	void doubleArrayConstructorWithAutowiring() throws MalformedURLException {
 		lbf.registerSingleton("integer1", new Integer(4));
 		lbf.registerSingleton("integer2", new Integer(5));
 		lbf.registerSingleton("resource1", new UrlResource("http://localhost:8080"));
@@ -1219,7 +1257,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testDoubleArrayConstructorWithOptionalAutowiring() throws MalformedURLException {
+	void doubleArrayConstructorWithOptionalAutowiring() throws MalformedURLException {
 		lbf.registerSingleton("resource1", new UrlResource("http://localhost:8080"));
 		lbf.registerSingleton("resource2", new UrlResource("http://localhost:9090"));
 
@@ -1233,7 +1271,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testExpressionInStringArray() {
+	void expressionInStringArray() {
 		BeanExpressionResolver beanExpressionResolver = mock(BeanExpressionResolver.class);
 		given(beanExpressionResolver.evaluate(eq("#{foo}"), any(BeanExpressionContext.class)))
 				.willReturn("classpath:/org/springframework/beans/factory/xml/util.properties");
@@ -1249,7 +1287,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireWithNoDependencies() {
+	void autowireWithNoDependencies() {
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
 		lbf.registerBeanDefinition("rod", bd);
 		assertThat(lbf.getBeanDefinitionCount()).isEqualTo(1);
@@ -1259,7 +1297,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireWithSatisfiedJavaBeanDependency() {
+	void autowireWithSatisfiedJavaBeanDependency() {
 		MutablePropertyValues pvs = new MutablePropertyValues();
 		pvs.add("name", "Rod");
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
@@ -1275,7 +1313,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireWithSatisfiedConstructorDependency() {
+	void autowireWithSatisfiedConstructorDependency() {
 		MutablePropertyValues pvs = new MutablePropertyValues();
 		pvs.add("name", "Rod");
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
@@ -1290,7 +1328,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireWithTwoMatchesForConstructorDependency() {
+	void autowireWithTwoMatchesForConstructorDependency() {
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
 		lbf.registerBeanDefinition("rod", bd);
 		RootBeanDefinition bd2 = new RootBeanDefinition(TestBean.class);
@@ -1302,7 +1340,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireWithUnsatisfiedConstructorDependency() {
+	void autowireWithUnsatisfiedConstructorDependency() {
 		MutablePropertyValues pvs = new MutablePropertyValues();
 		pvs.addPropertyValue(new PropertyValue("name", "Rod"));
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
@@ -1314,7 +1352,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireConstructor() {
+	void autowireConstructor() {
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
 		lbf.registerBeanDefinition("spouse", bd);
 		ConstructorDependenciesBean bean = (ConstructorDependenciesBean)
@@ -1325,7 +1363,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireBeanByName() {
+	void autowireBeanByName() {
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
 		lbf.registerBeanDefinition("spouse", bd);
 		DependenciesBean bean = (DependenciesBean)
@@ -1336,7 +1374,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireBeanByNameWithDependencyCheck() {
+	void autowireBeanByNameWithDependencyCheck() {
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
 		lbf.registerBeanDefinition("spous", bd);
 		assertThatExceptionOfType(UnsatisfiedDependencyException.class).isThrownBy(() ->
@@ -1344,7 +1382,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireBeanByNameWithNoDependencyCheck() {
+	void autowireBeanByNameWithNoDependencyCheck() {
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
 		lbf.registerBeanDefinition("spous", bd);
 		DependenciesBean bean = (DependenciesBean)
@@ -1353,7 +1391,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testDependsOnCycle() {
+	void dependsOnCycle() {
 		RootBeanDefinition bd1 = new RootBeanDefinition(TestBean.class);
 		bd1.setDependsOn("tb2");
 		lbf.registerBeanDefinition("tb1", bd1);
@@ -1368,7 +1406,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testImplicitDependsOnCycle() {
+	void implicitDependsOnCycle() {
 		RootBeanDefinition bd1 = new RootBeanDefinition(TestBean.class);
 		bd1.setDependsOn("tb2");
 		lbf.registerBeanDefinition("tb1", bd1);
@@ -1386,14 +1424,14 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testGetBeanByTypeWithNoneFound() {
+	void getBeanByTypeWithNoneFound() {
 		DefaultListableBeanFactory lbf = new DefaultListableBeanFactory();
 		assertThatExceptionOfType(NoSuchBeanDefinitionException.class).isThrownBy(() ->
 				lbf.getBean(TestBean.class));
 	}
 
 	@Test
-	public void testGetBeanByTypeDefinedInParent() {
+	void getBeanByTypeDefinedInParent() {
 		DefaultListableBeanFactory parent = new DefaultListableBeanFactory();
 		RootBeanDefinition bd1 = new RootBeanDefinition(TestBean.class);
 		parent.registerBeanDefinition("bd1", bd1);
@@ -1403,7 +1441,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testGetBeanByTypeWithAmbiguity() {
+	void getBeanByTypeWithAmbiguity() {
 		RootBeanDefinition bd1 = new RootBeanDefinition(TestBean.class);
 		RootBeanDefinition bd2 = new RootBeanDefinition(TestBean.class);
 		lbf.registerBeanDefinition("bd1", bd1);
@@ -1413,7 +1451,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testGetBeanByTypeWithPrimary() {
+	void getBeanByTypeWithPrimary() {
 		RootBeanDefinition bd1 = new RootBeanDefinition(TestBean.class);
 		bd1.setLazyInit(true);
 		RootBeanDefinition bd2 = new RootBeanDefinition(TestBean.class);
@@ -1427,7 +1465,7 @@ public class DefaultListableBeanFactoryTests {
 
 	@Test
 	@SuppressWarnings("rawtypes")
-	public void testGetFactoryBeanByTypeWithPrimary() {
+	void getFactoryBeanByTypeWithPrimary() {
 		DefaultListableBeanFactory lbf = new DefaultListableBeanFactory();
 		RootBeanDefinition bd1 = new RootBeanDefinition(NullTestBeanFactoryBean.class);
 		RootBeanDefinition bd2 = new RootBeanDefinition(NullTestBeanFactoryBean.class);
@@ -1445,7 +1483,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testGetBeanByTypeWithMultiplePrimary() {
+	void getBeanByTypeWithMultiplePrimary() {
 		RootBeanDefinition bd1 = new RootBeanDefinition(TestBean.class);
 		bd1.setPrimary(true);
 		RootBeanDefinition bd2 = new RootBeanDefinition(TestBean.class);
@@ -1458,7 +1496,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testGetBeanByTypeWithPriority() {
+	void getBeanByTypeWithPriority() {
 		lbf.setDependencyComparator(AnnotationAwareOrderComparator.INSTANCE);
 		RootBeanDefinition bd1 = new RootBeanDefinition(HighPriorityTestBean.class);
 		RootBeanDefinition bd2 = new RootBeanDefinition(LowPriorityTestBean.class);
@@ -1472,7 +1510,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testMapInjectionWithPriority() {
+	void mapInjectionWithPriority() {
 		lbf.setDependencyComparator(AnnotationAwareOrderComparator.INSTANCE);
 		RootBeanDefinition bd1 = new RootBeanDefinition(HighPriorityTestBean.class);
 		RootBeanDefinition bd2 = new RootBeanDefinition(LowPriorityTestBean.class);
@@ -1488,7 +1526,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testGetBeanByTypeWithMultiplePriority() {
+	void getBeanByTypeWithMultiplePriority() {
 		lbf.setDependencyComparator(AnnotationAwareOrderComparator.INSTANCE);
 		RootBeanDefinition bd1 = new RootBeanDefinition(HighPriorityTestBean.class);
 		RootBeanDefinition bd2 = new RootBeanDefinition(HighPriorityTestBean.class);
@@ -1501,7 +1539,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testGetBeanByTypeWithPriorityAndNullInstance() {
+	void getBeanByTypeWithPriorityAndNullInstance() {
 		lbf.setDependencyComparator(AnnotationAwareOrderComparator.INSTANCE);
 		RootBeanDefinition bd1 = new RootBeanDefinition(HighPriorityTestBean.class);
 		RootBeanDefinition bd2 = new RootBeanDefinition(NullTestBeanFactoryBean.class);
@@ -1512,7 +1550,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testGetBeanByTypePrimaryHasPrecedenceOverPriority() {
+	void getBeanByTypePrimaryHasPrecedenceOverPriority() {
 		lbf.setDependencyComparator(AnnotationAwareOrderComparator.INSTANCE);
 		RootBeanDefinition bd1 = new RootBeanDefinition(HighPriorityTestBean.class);
 		RootBeanDefinition bd2 = new RootBeanDefinition(TestBean.class);
@@ -1524,7 +1562,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testGetBeanByTypeFiltersOutNonAutowireCandidates() {
+	void getBeanByTypeFiltersOutNonAutowireCandidates() {
 		RootBeanDefinition bd1 = new RootBeanDefinition(TestBean.class);
 		RootBeanDefinition bd2 = new RootBeanDefinition(TestBean.class);
 		RootBeanDefinition na1 = new RootBeanDefinition(TestBean.class);
@@ -1541,22 +1579,22 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void getBeanByTypeWithNullRequiredType() {
+	void getBeanByTypeWithNullRequiredType() {
 		assertThatIllegalArgumentException().isThrownBy(() -> lbf.getBean((Class<?>) null));
 	}
 
 	@Test
-	public void getBeanProviderByTypeWithNullRequiredType() {
+	void getBeanProviderByTypeWithNullRequiredType() {
 		assertThatIllegalArgumentException().isThrownBy(() -> lbf.getBeanProvider((Class<?>) null));
 	}
 
 	@Test
-	public void resolveNamedBeanByTypeWithNullRequiredType() {
+	void resolveNamedBeanByTypeWithNullRequiredType() {
 		assertThatIllegalArgumentException().isThrownBy(() -> lbf.resolveNamedBean((Class<?>) null));
 	}
 
 	@Test
-	public void testGetBeanByTypeInstanceWithNoneFound() {
+	void getBeanByTypeInstanceWithNoneFound() {
 		assertThatExceptionOfType(NoSuchBeanDefinitionException.class).isThrownBy(() ->
 				lbf.getBean(ConstructorDependency.class));
 		assertThatExceptionOfType(NoSuchBeanDefinitionException.class).isThrownBy(() ->
@@ -1572,7 +1610,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testGetBeanByTypeInstanceDefinedInParent() {
+	void getBeanByTypeInstanceDefinedInParent() {
 		DefaultListableBeanFactory parent = new DefaultListableBeanFactory();
 		RootBeanDefinition bd1 = createConstructorDependencyBeanDefinition(99);
 		parent.registerBeanDefinition("bd1", bd1);
@@ -1601,10 +1639,10 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testGetBeanByTypeInstanceWithAmbiguity() {
+	void getBeanByTypeInstanceWithAmbiguity() {
 		RootBeanDefinition bd1 = createConstructorDependencyBeanDefinition(99);
 		RootBeanDefinition bd2 = new RootBeanDefinition(ConstructorDependency.class);
-		bd2.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+		bd2.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		bd2.getConstructorArgumentValues().addGenericArgumentValue("43");
 		lbf.registerBeanDefinition("bd1", bd1);
 		lbf.registerBeanDefinition("bd2", bd2);
@@ -1642,7 +1680,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testGetBeanByTypeInstanceWithPrimary() {
+	void getBeanByTypeInstanceWithPrimary() {
 		RootBeanDefinition bd1 = createConstructorDependencyBeanDefinition(99);
 		RootBeanDefinition bd2 = createConstructorDependencyBeanDefinition(43);
 		bd2.setPrimary(true);
@@ -1691,7 +1729,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testGetBeanByTypeInstanceWithMultiplePrimary() {
+	void getBeanByTypeInstanceWithMultiplePrimary() {
 		RootBeanDefinition bd1 = createConstructorDependencyBeanDefinition(99);
 		RootBeanDefinition bd2 = createConstructorDependencyBeanDefinition(43);
 		bd1.setPrimary(true);
@@ -1705,7 +1743,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testGetBeanByTypeInstanceFiltersOutNonAutowireCandidates() {
+	void getBeanByTypeInstanceFiltersOutNonAutowireCandidates() {
 		RootBeanDefinition bd1 = createConstructorDependencyBeanDefinition(99);
 		RootBeanDefinition bd2 = createConstructorDependencyBeanDefinition(43);
 		RootBeanDefinition na1 = createConstructorDependencyBeanDefinition(21);
@@ -1723,7 +1761,7 @@ public class DefaultListableBeanFactoryTests {
 
 	@Test
 	@SuppressWarnings("rawtypes")
-	public void testBeanProviderSerialization() throws Exception {
+	void beanProviderSerialization() throws Exception {
 		lbf.setSerializationId("test");
 
 		ObjectProvider<ConstructorDependency> provider = lbf.getBeanProvider(ConstructorDependency.class);
@@ -1737,12 +1775,12 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testGetBeanWithArgsNotCreatedForFactoryBeanChecking() {
+	void getBeanWithArgsNotCreatedForFactoryBeanChecking() {
 		RootBeanDefinition bd1 = new RootBeanDefinition(ConstructorDependency.class);
-		bd1.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+		bd1.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		lbf.registerBeanDefinition("bd1", bd1);
 		RootBeanDefinition bd2 = new RootBeanDefinition(ConstructorDependencyFactoryBean.class);
-		bd2.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+		bd2.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		lbf.registerBeanDefinition("bd2", bd2);
 
 		ConstructorDependency bean = lbf.getBean(ConstructorDependency.class, 42);
@@ -1759,13 +1797,13 @@ public class DefaultListableBeanFactoryTests {
 
 	private RootBeanDefinition createConstructorDependencyBeanDefinition(int age) {
 		RootBeanDefinition bd = new RootBeanDefinition(ConstructorDependency.class);
-		bd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+		bd.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		bd.getConstructorArgumentValues().addGenericArgumentValue(age);
 		return bd;
 	}
 
 	@Test
-	public void testAutowireBeanByType() {
+	void autowireBeanByType() {
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
 		lbf.registerBeanDefinition("test", bd);
 		DependenciesBean bean = (DependenciesBean)
@@ -1781,7 +1819,7 @@ public class DefaultListableBeanFactoryTests {
 	 * target="_blank">SPR-4040</a>.
 	 */
 	@Test
-	public void testAutowireBeanWithFactoryBeanByType() {
+	void autowireBeanWithFactoryBeanByType() {
 		RootBeanDefinition bd = new RootBeanDefinition(LazyInitFactory.class);
 		lbf.registerBeanDefinition("factoryBean", bd);
 		LazyInitFactory factoryBean = (LazyInitFactory) lbf.getBean("&factoryBean");
@@ -1793,7 +1831,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireBeanWithFactoryBeanByTypeWithPrimary() {
+	void autowireBeanWithFactoryBeanByTypeWithPrimary() {
 		DefaultListableBeanFactory lbf = new DefaultListableBeanFactory();
 		RootBeanDefinition bd1 = new RootBeanDefinition(LazyInitFactory.class);
 		RootBeanDefinition bd2 = new RootBeanDefinition(LazyInitFactory.class);
@@ -1811,7 +1849,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testGetTypeForAbstractFactoryBean() {
+	void getTypeForAbstractFactoryBean() {
 		RootBeanDefinition bd = new RootBeanDefinition(FactoryBeanThatShouldntBeCalled.class);
 		bd.setAbstract(true);
 		lbf.registerBeanDefinition("factoryBean", bd);
@@ -1819,7 +1857,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testGetBeanNamesForTypeBeforeFactoryBeanCreation() {
+	void getBeanNamesForTypeBeforeFactoryBeanCreation() {
 		lbf.registerBeanDefinition("factoryBean", new RootBeanDefinition(FactoryBeanThatShouldntBeCalled.class));
 		assertThat(lbf.containsSingleton("factoryBean")).isFalse();
 
@@ -1841,7 +1879,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testGetBeanNamesForTypeAfterFactoryBeanCreation() {
+	void getBeanNamesForTypeAfterFactoryBeanCreation() {
 		lbf.registerBeanDefinition("factoryBean", new RootBeanDefinition(FactoryBeanThatShouldntBeCalled.class));
 		lbf.getBean("&factoryBean");
 
@@ -1869,7 +1907,7 @@ public class DefaultListableBeanFactoryTests {
 	 * {@code set&amp;FactoryBean(...)}.
 	 */
 	@Test
-	public void testAutowireBeanWithFactoryBeanByName() {
+	void autowireBeanWithFactoryBeanByName() {
 		RootBeanDefinition bd = new RootBeanDefinition(LazyInitFactory.class);
 		lbf.registerBeanDefinition("factoryBean", bd);
 		LazyInitFactory factoryBean = (LazyInitFactory) lbf.getBean("&factoryBean");
@@ -1879,7 +1917,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireBeanByTypeWithTwoMatches() {
+	void autowireBeanByTypeWithTwoMatches() {
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
 		RootBeanDefinition bd2 = new RootBeanDefinition(TestBean.class);
 		lbf.registerBeanDefinition("test", bd);
@@ -1891,20 +1929,20 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireBeanByTypeWithDependencyCheck() {
+	void autowireBeanByTypeWithDependencyCheck() {
 		assertThatExceptionOfType(UnsatisfiedDependencyException.class).isThrownBy(() ->
 				lbf.autowire(DependenciesBean.class, AutowireCapableBeanFactory.AUTOWIRE_BY_TYPE, true));
 	}
 
 	@Test
-	public void testAutowireBeanByTypeWithNoDependencyCheck() {
+	void autowireBeanByTypeWithNoDependencyCheck() {
 		DependenciesBean bean = (DependenciesBean)
 				lbf.autowire(DependenciesBean.class, AutowireCapableBeanFactory.AUTOWIRE_BY_TYPE, false);
 		assertThat(bean.getSpouse()).isNull();
 	}
 
 	@Test
-	public void testAutowireBeanByTypeWithTwoMatchesAndOnePrimary() {
+	void autowireBeanByTypeWithTwoMatchesAndOnePrimary() {
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
 		bd.setPrimary(true);
 		RootBeanDefinition bd2 = new RootBeanDefinition(TestBean.class);
@@ -1917,7 +1955,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireBeanByTypeWithTwoPrimaryCandidates() {
+	void autowireBeanByTypeWithTwoPrimaryCandidates() {
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
 		bd.setPrimary(true);
 		RootBeanDefinition bd2 = new RootBeanDefinition(TestBean.class);
@@ -1930,7 +1968,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireBeanByTypeWithTwoMatchesAndPriority() {
+	void autowireBeanByTypeWithTwoMatchesAndPriority() {
 		lbf.setDependencyComparator(AnnotationAwareOrderComparator.INSTANCE);
 		RootBeanDefinition bd = new RootBeanDefinition(HighPriorityTestBean.class);
 		RootBeanDefinition bd2 = new RootBeanDefinition(LowPriorityTestBean.class);
@@ -1943,7 +1981,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireBeanByTypeWithIdenticalPriorityCandidates() {
+	void autowireBeanByTypeWithIdenticalPriorityCandidates() {
 		lbf.setDependencyComparator(AnnotationAwareOrderComparator.INSTANCE);
 		RootBeanDefinition bd = new RootBeanDefinition(HighPriorityTestBean.class);
 		RootBeanDefinition bd2 = new RootBeanDefinition(HighPriorityTestBean.class);
@@ -1956,7 +1994,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireBeanByTypePrimaryTakesPrecedenceOverPriority() {
+	void autowireBeanByTypePrimaryTakesPrecedenceOverPriority() {
 		lbf.setDependencyComparator(AnnotationAwareOrderComparator.INSTANCE);
 		RootBeanDefinition bd = new RootBeanDefinition(HighPriorityTestBean.class);
 		RootBeanDefinition bd2 = new RootBeanDefinition(TestBean.class);
@@ -1970,7 +2008,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireExistingBeanByName() {
+	void autowireExistingBeanByName() {
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
 		lbf.registerBeanDefinition("spouse", bd);
 		DependenciesBean existingBean = new DependenciesBean();
@@ -1981,7 +2019,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireExistingBeanByNameWithDependencyCheck() {
+	void autowireExistingBeanByNameWithDependencyCheck() {
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
 		lbf.registerBeanDefinition("spous", bd);
 		DependenciesBean existingBean = new DependenciesBean();
@@ -1990,7 +2028,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireExistingBeanByNameWithNoDependencyCheck() {
+	void autowireExistingBeanByNameWithNoDependencyCheck() {
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
 		lbf.registerBeanDefinition("spous", bd);
 		DependenciesBean existingBean = new DependenciesBean();
@@ -1999,7 +2037,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireExistingBeanByType() {
+	void autowireExistingBeanByType() {
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
 		lbf.registerBeanDefinition("test", bd);
 		DependenciesBean existingBean = new DependenciesBean();
@@ -2009,27 +2047,27 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAutowireExistingBeanByTypeWithDependencyCheck() {
+	void autowireExistingBeanByTypeWithDependencyCheck() {
 		DependenciesBean existingBean = new DependenciesBean();
 		assertThatExceptionOfType(UnsatisfiedDependencyException.class).isThrownBy(() ->
 				lbf.autowireBeanProperties(existingBean, AutowireCapableBeanFactory.AUTOWIRE_BY_TYPE, true));
 	}
 
 	@Test
-	public void testAutowireExistingBeanByTypeWithNoDependencyCheck() {
+	void autowireExistingBeanByTypeWithNoDependencyCheck() {
 		DependenciesBean existingBean = new DependenciesBean();
 		lbf.autowireBeanProperties(existingBean, AutowireCapableBeanFactory.AUTOWIRE_BY_TYPE, false);
 		assertThat(existingBean.getSpouse()).isNull();
 	}
 
 	@Test
-	public void testInvalidAutowireMode() {
+	void invalidAutowireMode() {
 		assertThatIllegalArgumentException().isThrownBy(() ->
 				lbf.autowireBeanProperties(new TestBean(), AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR, false));
 	}
 
 	@Test
-	public void testApplyBeanPropertyValues() {
+	void applyBeanPropertyValues() {
 		MutablePropertyValues pvs = new MutablePropertyValues();
 		pvs.add("age", "99");
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
@@ -2042,7 +2080,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testApplyBeanPropertyValuesWithIncompleteDefinition() {
+	void applyBeanPropertyValuesWithIncompleteDefinition() {
 		MutablePropertyValues pvs = new MutablePropertyValues();
 		pvs.add("age", "99");
 		RootBeanDefinition bd = new RootBeanDefinition();
@@ -2057,14 +2095,14 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testCreateBean() {
+	void createBean() {
 		TestBean tb = lbf.createBean(TestBean.class);
 		assertThat(tb.getBeanFactory()).isSameAs(lbf);
 		lbf.destroyBean(tb);
 	}
 
 	@Test
-	public void testCreateBeanWithDisposableBean() {
+	void createBeanWithDisposableBean() {
 		DerivedTestBean tb = lbf.createBean(DerivedTestBean.class);
 		assertThat(tb.getBeanFactory()).isSameAs(lbf);
 		lbf.destroyBean(tb);
@@ -2072,7 +2110,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testConfigureBean() {
+	void configureBean() {
 		MutablePropertyValues pvs = new MutablePropertyValues();
 		pvs.add("age", "99");
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
@@ -2087,7 +2125,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testConfigureBeanWithAutowiring() {
+	void configureBeanWithAutowiring() {
 		RootBeanDefinition bd = new RootBeanDefinition(TestBean.class);
 		lbf.registerBeanDefinition("spouse", bd);
 		MutablePropertyValues pvs = new MutablePropertyValues();
@@ -2103,7 +2141,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testExtensiveCircularReference() {
+	void extensiveCircularReference() {
 		for (int i = 0; i < 1000; i++) {
 			MutablePropertyValues pvs = new MutablePropertyValues();
 			pvs.addPropertyValue(new PropertyValue("spouse", new RuntimeBeanReference("bean" + (i < 99 ? i + 1 : 0))));
@@ -2120,7 +2158,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testCircularReferenceThroughAutowiring() {
+	void circularReferenceThroughAutowiring() {
 		RootBeanDefinition bd = new RootBeanDefinition(ConstructorDependencyBean.class);
 		bd.setAutowireMode(RootBeanDefinition.AUTOWIRE_CONSTRUCTOR);
 		lbf.registerBeanDefinition("test", bd);
@@ -2129,7 +2167,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testCircularReferenceThroughFactoryBeanAutowiring() {
+	void circularReferenceThroughFactoryBeanAutowiring() {
 		RootBeanDefinition bd = new RootBeanDefinition(ConstructorDependencyFactoryBean.class);
 		bd.setAutowireMode(RootBeanDefinition.AUTOWIRE_CONSTRUCTOR);
 		lbf.registerBeanDefinition("test", bd);
@@ -2138,7 +2176,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testCircularReferenceThroughFactoryBeanTypeCheck() {
+	void circularReferenceThroughFactoryBeanTypeCheck() {
 		RootBeanDefinition bd = new RootBeanDefinition(ConstructorDependencyFactoryBean.class);
 		bd.setAutowireMode(RootBeanDefinition.AUTOWIRE_CONSTRUCTOR);
 		lbf.registerBeanDefinition("test", bd);
@@ -2147,7 +2185,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testAvoidCircularReferenceThroughAutowiring() {
+	void avoidCircularReferenceThroughAutowiring() {
 		RootBeanDefinition bd = new RootBeanDefinition(ConstructorDependencyFactoryBean.class);
 		bd.setAutowireMode(RootBeanDefinition.AUTOWIRE_CONSTRUCTOR);
 		lbf.registerBeanDefinition("test", bd);
@@ -2158,7 +2196,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testConstructorDependencyWithClassResolution() {
+	void constructorDependencyWithClassResolution() {
 		RootBeanDefinition bd = new RootBeanDefinition(ConstructorDependencyWithClassResolution.class);
 		bd.getConstructorArgumentValues().addGenericArgumentValue("java.lang.String");
 		lbf.registerBeanDefinition("test", bd);
@@ -2166,7 +2204,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testConstructorDependencyWithUnresolvableClass() {
+	void constructorDependencyWithUnresolvableClass() {
 		RootBeanDefinition bd = new RootBeanDefinition(ConstructorDependencyWithClassResolution.class);
 		bd.getConstructorArgumentValues().addGenericArgumentValue("java.lang.Strin");
 		lbf.registerBeanDefinition("test", bd);
@@ -2175,7 +2213,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testBeanDefinitionWithInterface() {
+	void beanDefinitionWithInterface() {
 		lbf.registerBeanDefinition("test", new RootBeanDefinition(ITestBean.class));
 		assertThatExceptionOfType(BeanCreationException.class).isThrownBy(() ->
 				lbf.getBean("test"))
@@ -2184,7 +2222,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testBeanDefinitionWithAbstractClass() {
+	void beanDefinitionWithAbstractClass() {
 		lbf.registerBeanDefinition("test", new RootBeanDefinition(AbstractBeanFactory.class));
 		assertThatExceptionOfType(BeanCreationException.class).isThrownBy(() ->
 				lbf.getBean("test"))
@@ -2193,13 +2231,13 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testPrototypeFactoryBeanNotEagerlyCalled() {
+	void prototypeFactoryBeanNotEagerlyCalled() {
 		lbf.registerBeanDefinition("test", new RootBeanDefinition(FactoryBeanThatShouldntBeCalled.class));
 		lbf.preInstantiateSingletons();
 	}
 
 	@Test
-	public void testLazyInitFlag() {
+	void lazyInitFlag() {
 		DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
 		RootBeanDefinition bd1 = new RootBeanDefinition(TestBean.class);
 		bd1.setLazyInit(true);
@@ -2220,7 +2258,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testLazyInitFactory() {
+	void lazyInitFactory() {
 		lbf.registerBeanDefinition("test", new RootBeanDefinition(LazyInitFactory.class));
 		lbf.preInstantiateSingletons();
 		LazyInitFactory factory = (LazyInitFactory) lbf.getBean("&test");
@@ -2228,7 +2266,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testSmartInitFactory() {
+	void smartInitFactory() {
 		lbf.registerBeanDefinition("test", new RootBeanDefinition(EagerInitFactory.class));
 		lbf.preInstantiateSingletons();
 		EagerInitFactory factory = (EagerInitFactory) lbf.getBean("&test");
@@ -2236,16 +2274,16 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testPrototypeFactoryBeanNotEagerlyCalledInCaseOfBeanClassName() {
+	void prototypeFactoryBeanNotEagerlyCalledInCaseOfBeanClassName() {
 		lbf.registerBeanDefinition("test",
 				new RootBeanDefinition(FactoryBeanThatShouldntBeCalled.class.getName(), null, null));
 		lbf.preInstantiateSingletons();
 	}
 
 	@Test
-	public void testPrototypeStringCreatedRepeatedly() {
+	void prototypeStringCreatedRepeatedly() {
 		RootBeanDefinition stringDef = new RootBeanDefinition(String.class);
-		stringDef.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+		stringDef.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		stringDef.getConstructorArgumentValues().addGenericArgumentValue(new TypedStringValue("value"));
 		lbf.registerBeanDefinition("string", stringDef);
 		String val1 = lbf.getBean("string", String.class);
@@ -2256,12 +2294,12 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testPrototypeWithArrayConversionForConstructor() {
+	void prototypeWithArrayConversionForConstructor() {
 		List<String> list = new ManagedList<>();
 		list.add("myName");
 		list.add("myBeanName");
 		RootBeanDefinition bd = new RootBeanDefinition(DerivedTestBean.class);
-		bd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+		bd.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		bd.getConstructorArgumentValues().addGenericArgumentValue(list);
 		lbf.registerBeanDefinition("test", bd);
 		DerivedTestBean tb = (DerivedTestBean) lbf.getBean("test");
@@ -2274,12 +2312,12 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testPrototypeWithArrayConversionForFactoryMethod() {
+	void prototypeWithArrayConversionForFactoryMethod() {
 		List<String> list = new ManagedList<>();
 		list.add("myName");
 		list.add("myBeanName");
 		RootBeanDefinition bd = new RootBeanDefinition(DerivedTestBean.class);
-		bd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+		bd.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		bd.setFactoryMethodName("create");
 		bd.getConstructorArgumentValues().addGenericArgumentValue(list);
 		lbf.registerBeanDefinition("test", bd);
@@ -2294,10 +2332,10 @@ public class DefaultListableBeanFactoryTests {
 
 	@Test
 	@EnabledForTestGroups(TestGroup.PERFORMANCE)
-	public void testPrototypeCreationIsFastEnough() {
+	void prototypeCreationIsFastEnough() {
 		Assume.notLogging(factoryLog);
 		RootBeanDefinition rbd = new RootBeanDefinition(TestBean.class);
-		rbd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+		rbd.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		lbf.registerBeanDefinition("test", rbd);
 		lbf.freezeConfiguration();
 		StopWatch sw = new StopWatch();
@@ -2312,10 +2350,10 @@ public class DefaultListableBeanFactoryTests {
 
 	@Test
 	@EnabledForTestGroups(TestGroup.PERFORMANCE)
-	public void testPrototypeCreationWithDependencyCheckIsFastEnough() {
+	void prototypeCreationWithDependencyCheckIsFastEnough() {
 		Assume.notLogging(factoryLog);
 		RootBeanDefinition rbd = new RootBeanDefinition(LifecycleBean.class);
-		rbd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+		rbd.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		rbd.setDependencyCheck(RootBeanDefinition.DEPENDENCY_CHECK_OBJECTS);
 		lbf.registerBeanDefinition("test", rbd);
 		lbf.addBeanPostProcessor(new LifecycleBean.PostProcessor());
@@ -2331,12 +2369,11 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	@Disabled  // TODO re-enable when ConstructorResolver TODO sorted out
 	@EnabledForTestGroups(TestGroup.PERFORMANCE)
-	public void testPrototypeCreationWithConstructorArgumentsIsFastEnough() {
+	void prototypeCreationWithConstructorArgumentsIsFastEnough() {
 		Assume.notLogging(factoryLog);
 		RootBeanDefinition rbd = new RootBeanDefinition(TestBean.class);
-		rbd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+		rbd.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		rbd.getConstructorArgumentValues().addGenericArgumentValue("juergen");
 		rbd.getConstructorArgumentValues().addGenericArgumentValue("99");
 		lbf.registerBeanDefinition("test", rbd);
@@ -2349,16 +2386,15 @@ public class DefaultListableBeanFactoryTests {
 			assertThat(tb.getAge()).isEqualTo(99);
 		}
 		sw.stop();
-		// System.out.println(sw.getTotalTimeMillis());
 		assertThat(sw.getTotalTimeMillis() < 3000).as("Prototype creation took too long: " + sw.getTotalTimeMillis()).isTrue();
 	}
 
 	@Test
 	@EnabledForTestGroups(TestGroup.PERFORMANCE)
-	public void testPrototypeCreationWithResolvedConstructorArgumentsIsFastEnough() {
+	void prototypeCreationWithResolvedConstructorArgumentsIsFastEnough() {
 		Assume.notLogging(factoryLog);
 		RootBeanDefinition rbd = new RootBeanDefinition(TestBean.class);
-		rbd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+		rbd.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		rbd.getConstructorArgumentValues().addGenericArgumentValue(new RuntimeBeanReference("spouse"));
 		lbf.registerBeanDefinition("test", rbd);
 		lbf.registerBeanDefinition("spouse", new RootBeanDefinition(TestBean.class));
@@ -2377,10 +2413,10 @@ public class DefaultListableBeanFactoryTests {
 
 	@Test
 	@EnabledForTestGroups(TestGroup.PERFORMANCE)
-	public void testPrototypeCreationWithPropertiesIsFastEnough() {
+	void prototypeCreationWithPropertiesIsFastEnough() {
 		Assume.notLogging(factoryLog);
 		RootBeanDefinition rbd = new RootBeanDefinition(TestBean.class);
-		rbd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+		rbd.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		rbd.getPropertyValues().add("name", "juergen");
 		rbd.getPropertyValues().add("age", "99");
 		lbf.registerBeanDefinition("test", rbd);
@@ -2399,10 +2435,10 @@ public class DefaultListableBeanFactoryTests {
 
 	@Test
 	@EnabledForTestGroups(TestGroup.PERFORMANCE)
-	public void testPrototypeCreationWithResolvedPropertiesIsFastEnough() {
+	void prototypeCreationWithResolvedPropertiesIsFastEnough() {
 		Assume.notLogging(factoryLog);
 		RootBeanDefinition rbd = new RootBeanDefinition(TestBean.class);
-		rbd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+		rbd.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		rbd.getPropertyValues().add("spouse", new RuntimeBeanReference("spouse"));
 		lbf.registerBeanDefinition("test", rbd);
 		lbf.registerBeanDefinition("spouse", new RootBeanDefinition(TestBean.class));
@@ -2421,7 +2457,7 @@ public class DefaultListableBeanFactoryTests {
 
 	@Test
 	@EnabledForTestGroups(TestGroup.PERFORMANCE)
-	public void testSingletonLookupByNameIsFastEnough() {
+	void singletonLookupByNameIsFastEnough() {
 		Assume.notLogging(factoryLog);
 		lbf.registerBeanDefinition("test", new RootBeanDefinition(TestBean.class));
 		lbf.freezeConfiguration();
@@ -2437,7 +2473,7 @@ public class DefaultListableBeanFactoryTests {
 
 	@Test
 	@EnabledForTestGroups(TestGroup.PERFORMANCE)
-	public void testSingletonLookupByTypeIsFastEnough() {
+	void singletonLookupByTypeIsFastEnough() {
 		Assume.notLogging(factoryLog);
 		lbf.registerBeanDefinition("test", new RootBeanDefinition(TestBean.class));
 		lbf.freezeConfiguration();
@@ -2452,7 +2488,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testBeanPostProcessorWithWrappedObjectAndDisposableBean() {
+	void beanPostProcessorWithWrappedObjectAndDisposableBean() {
 		RootBeanDefinition bd = new RootBeanDefinition(BeanWithDisposableBean.class);
 		lbf.registerBeanDefinition("test", bd);
 		lbf.addBeanPostProcessor(new BeanPostProcessor() {
@@ -2468,7 +2504,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testBeanPostProcessorWithWrappedObjectAndCloseable() {
+	void beanPostProcessorWithWrappedObjectAndCloseable() {
 		RootBeanDefinition bd = new RootBeanDefinition(BeanWithCloseable.class);
 		lbf.registerBeanDefinition("test", bd);
 		lbf.addBeanPostProcessor(new BeanPostProcessor() {
@@ -2484,7 +2520,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testBeanPostProcessorWithWrappedObjectAndDestroyMethod() {
+	void beanPostProcessorWithWrappedObjectAndDestroyMethod() {
 		RootBeanDefinition bd = new RootBeanDefinition(BeanWithDestroyMethod.class);
 		bd.setDestroyMethodName("close");
 		lbf.registerBeanDefinition("test", bd);
@@ -2502,7 +2538,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testDestroyMethodOnInnerBean() {
+	void destroyMethodOnInnerBean() {
 		RootBeanDefinition innerBd = new RootBeanDefinition(BeanWithDestroyMethod.class);
 		innerBd.setDestroyMethodName("close");
 		RootBeanDefinition bd = new RootBeanDefinition(BeanWithDestroyMethod.class);
@@ -2517,9 +2553,9 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testDestroyMethodOnInnerBeanAsPrototype() {
+	void destroyMethodOnInnerBeanAsPrototype() {
 		RootBeanDefinition innerBd = new RootBeanDefinition(BeanWithDestroyMethod.class);
-		innerBd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+		innerBd.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		innerBd.setDestroyMethodName("close");
 		RootBeanDefinition bd = new RootBeanDefinition(BeanWithDestroyMethod.class);
 		bd.setDestroyMethodName("close");
@@ -2533,12 +2569,12 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testFindTypeOfSingletonFactoryMethodOnBeanInstance() {
+	void findTypeOfSingletonFactoryMethodOnBeanInstance() {
 		findTypeOfPrototypeFactoryMethodOnBeanInstance(true);
 	}
 
 	@Test
-	public void testFindTypeOfPrototypeFactoryMethodOnBeanInstance() {
+	void findTypeOfPrototypeFactoryMethodOnBeanInstance() {
 		findTypeOfPrototypeFactoryMethodOnBeanInstance(false);
 	}
 
@@ -2563,7 +2599,7 @@ public class DefaultListableBeanFactoryTests {
 		factoryMethodDefinitionWithProperties.setFactoryBeanName("factoryBeanInstance");
 		factoryMethodDefinitionWithProperties.setFactoryMethodName("create");
 		if (!singleton) {
-			factoryMethodDefinitionWithProperties.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+			factoryMethodDefinitionWithProperties.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		}
 		lbf.registerBeanDefinition("fmWithProperties", factoryMethodDefinitionWithProperties);
 
@@ -2571,7 +2607,7 @@ public class DefaultListableBeanFactoryTests {
 		factoryMethodDefinitionGeneric.setFactoryBeanName("factoryBeanInstance");
 		factoryMethodDefinitionGeneric.setFactoryMethodName("createGeneric");
 		if (!singleton) {
-			factoryMethodDefinitionGeneric.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+			factoryMethodDefinitionGeneric.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		}
 		lbf.registerBeanDefinition("fmGeneric", factoryMethodDefinitionGeneric);
 
@@ -2582,7 +2618,7 @@ public class DefaultListableBeanFactoryTests {
 		cvals.addGenericArgumentValue(expectedNameFromArgs);
 		factoryMethodDefinitionWithArgs.setConstructorArgumentValues(cvals);
 		if (!singleton) {
-			factoryMethodDefinitionWithArgs.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+			factoryMethodDefinitionWithArgs.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		}
 		lbf.registerBeanDefinition("fmWithArgs", factoryMethodDefinitionWithArgs);
 
@@ -2624,7 +2660,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testScopingBeanToUnregisteredScopeResultsInAnException() {
+	void scopingBeanToUnregisteredScopeResultsInAnException() {
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(TestBean.class);
 		AbstractBeanDefinition beanDefinition = builder.getBeanDefinition();
 		beanDefinition.setScope("he put himself so low could hardly look me in the face");
@@ -2636,11 +2672,11 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testExplicitScopeInheritanceForChildBeanDefinitions() {
+	void explicitScopeInheritanceForChildBeanDefinitions() {
 		String theChildScope = "bonanza!";
 
 		RootBeanDefinition parent = new RootBeanDefinition();
-		parent.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+		parent.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 
 		AbstractBeanDefinition child = BeanDefinitionBuilder.childBeanDefinition("parent").getBeanDefinition();
 		child.setBeanClass(TestBean.class);
@@ -2656,7 +2692,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testScopeInheritanceForChildBeanDefinitions() {
+	void scopeInheritanceForChildBeanDefinitions() {
 		RootBeanDefinition parent = new RootBeanDefinition();
 		parent.setScope("bonanza!");
 
@@ -2673,12 +2709,12 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testFieldSettingWithInstantiationAwarePostProcessorNoShortCircuit() {
+	void fieldSettingWithInstantiationAwarePostProcessorNoShortCircuit() {
 		doTestFieldSettingWithInstantiationAwarePostProcessor(false);
 	}
 
 	@Test
-	public void testFieldSettingWithInstantiationAwarePostProcessorWithShortCircuit() {
+	void fieldSettingWithInstantiationAwarePostProcessorWithShortCircuit() {
 		doTestFieldSettingWithInstantiationAwarePostProcessor(true);
 	}
 
@@ -2719,9 +2755,9 @@ public class DefaultListableBeanFactoryTests {
 
 	@Test
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public void testInitSecurityAwarePrototypeBean() {
+	void initSecurityAwarePrototypeBean() {
 		RootBeanDefinition bd = new RootBeanDefinition(TestSecuredBean.class);
-		bd.setScope(ConfigurableBeanFactory.SCOPE_PROTOTYPE);
+		bd.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		bd.setInitMethodName("init");
 		lbf.registerBeanDefinition("test", bd);
 		final Subject subject = new Subject();
@@ -2734,7 +2770,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testContainsBeanReturnsTrueEvenForAbstractBeanDefinition() {
+	void containsBeanReturnsTrueEvenForAbstractBeanDefinition() {
 		lbf.registerBeanDefinition("abs", BeanDefinitionBuilder
 				.rootBeanDefinition(TestBean.class).setAbstract(true).getBeanDefinition());
 		assertThat(lbf.containsBean("abs")).isEqualTo(true);
@@ -2742,7 +2778,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void resolveEmbeddedValue() {
+	void resolveEmbeddedValue() {
 		StringValueResolver r1 = mock(StringValueResolver.class);
 		StringValueResolver r2 = mock(StringValueResolver.class);
 		StringValueResolver r3 = mock(StringValueResolver.class);
@@ -2761,7 +2797,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void populatedJavaUtilOptionalBean() {
+	void populatedJavaUtilOptionalBean() {
 		RootBeanDefinition bd = new RootBeanDefinition(Optional.class);
 		bd.setFactoryMethodName("of");
 		bd.getConstructorArgumentValues().addGenericArgumentValue("CONTENT");
@@ -2770,7 +2806,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void emptyJavaUtilOptionalBean() {
+	void emptyJavaUtilOptionalBean() {
 		RootBeanDefinition bd = new RootBeanDefinition(Optional.class);
 		bd.setFactoryMethodName("empty");
 		lbf.registerBeanDefinition("optionalBean", bd);
@@ -2778,7 +2814,7 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 	@Test
-	public void testNonPublicEnum() {
+	void nonPublicEnum() {
 		RootBeanDefinition bd = new RootBeanDefinition(NonPublicEnumHolder.class);
 		bd.getConstructorArgumentValues().addGenericArgumentValue("VALUE_1");
 		lbf.registerBeanDefinition("holderBean", bd);
@@ -2799,7 +2835,7 @@ public class DefaultListableBeanFactoryTests {
 	@Test
 	@Timeout(1)
 	@EnabledForTestGroups(TestGroup.PERFORMANCE)
-	public void testByTypeLookupIsFastEnough() {
+	void byTypeLookupIsFastEnough() {
 		for (int i = 0; i < 1000; i++) {
 			lbf.registerBeanDefinition("a" + i, new RootBeanDefinition(A.class));
 		}
@@ -2815,7 +2851,7 @@ public class DefaultListableBeanFactoryTests {
 	@Test
 	@Timeout(1)
 	@EnabledForTestGroups(TestGroup.PERFORMANCE)
-	public void testRegistrationOfManyBeanDefinitionsIsFastEnough() {
+	void registrationOfManyBeanDefinitionsIsFastEnough() {
 		lbf.registerBeanDefinition("b", new RootBeanDefinition(B.class));
 		// lbf.getBean("b");
 
@@ -2827,7 +2863,7 @@ public class DefaultListableBeanFactoryTests {
 	@Test
 	@Timeout(1)
 	@EnabledForTestGroups(TestGroup.PERFORMANCE)
-	public void testRegistrationOfManySingletonsIsFastEnough() {
+	void registrationOfManySingletonsIsFastEnough() {
 		lbf.registerBeanDefinition("b", new RootBeanDefinition(B.class));
 		// lbf.getBean("b");
 
@@ -3217,44 +3253,12 @@ public class DefaultListableBeanFactoryTests {
 	}
 
 
-	private static class TestPrincipal implements Principal {
-
-		private String name;
-
-		public TestPrincipal(String name) {
-			this.name = name;
-		}
-
-		@Override
-		public String getName() {
-			return this.name;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj == this) {
-				return true;
-			}
-			if (!(obj instanceof TestPrincipal)) {
-				return false;
-			}
-			TestPrincipal p = (TestPrincipal) obj;
-			return this.name.equals(p.name);
-		}
-
-		@Override
-		public int hashCode() {
-			return this.name.hashCode();
-		}
-	}
-
-
 	@SuppressWarnings("unused")
 	private static class TestSecuredBean {
 
 		private String userName;
 
-		public void init() {
+		void init() {
 			AccessControlContext acc = AccessController.getContext();
 			Subject subject = Subject.getSubject(acc);
 			if (subject == null) {

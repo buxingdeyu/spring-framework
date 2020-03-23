@@ -18,6 +18,7 @@ package org.springframework.test.web.servlet.htmlunit;
 
 import java.io.IOException;
 import java.net.URL;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -29,10 +30,10 @@ import com.gargoylesoftware.htmlunit.util.Cookie;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.testfixture.TestGroup;
 import org.springframework.test.context.junit.jupiter.web.SpringJUnitWebConfig;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.tests.TestGroup;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;

@@ -22,6 +22,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.net.ssl.SSLSession;
 
 import io.undertow.connector.ByteBufferPool;
@@ -99,6 +100,11 @@ class UndertowServerHttpRequest extends AbstractServerHttpRequest {
 	@Override
 	public InetSocketAddress getRemoteAddress() {
 		return this.exchange.getSourceAddress();
+	}
+
+	@Override
+	public InetSocketAddress getLocalAddress() {
+		return this.exchange.getDestinationAddress();
 	}
 
 	@Nullable

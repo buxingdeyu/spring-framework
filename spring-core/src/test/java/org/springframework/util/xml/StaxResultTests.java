@@ -19,6 +19,7 @@ package org.springframework.util.xml;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
+
 import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
@@ -30,7 +31,7 @@ import javax.xml.transform.stream.StreamSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.tests.XmlContent;
+import org.springframework.core.testfixture.xml.XmlContent;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

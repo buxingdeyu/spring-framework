@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -45,11 +46,6 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.MutablePropertyValues;
-import org.springframework.mock.web.test.MockFilterConfig;
-import org.springframework.mock.web.test.MockHttpServletRequest;
-import org.springframework.mock.web.test.MockHttpServletResponse;
-import org.springframework.mock.web.test.MockServletContext;
-import org.springframework.mock.web.test.PassThroughFilterChain;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.context.WebApplicationContext;
@@ -59,6 +55,11 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.multipart.support.ByteArrayMultipartFileEditor;
 import org.springframework.web.multipart.support.MultipartFilter;
 import org.springframework.web.multipart.support.StringMultipartFileEditor;
+import org.springframework.web.testfixture.servlet.MockFilterConfig;
+import org.springframework.web.testfixture.servlet.MockHttpServletRequest;
+import org.springframework.web.testfixture.servlet.MockHttpServletResponse;
+import org.springframework.web.testfixture.servlet.MockServletContext;
+import org.springframework.web.testfixture.servlet.PassThroughFilterChain;
 import org.springframework.web.util.WebUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -405,7 +406,6 @@ public class CommonsMultipartResolverTests {
 	}
 
 
-	@SuppressWarnings("serial")
 	private static class MockFileItem implements FileItem {
 
 		private String fieldName;

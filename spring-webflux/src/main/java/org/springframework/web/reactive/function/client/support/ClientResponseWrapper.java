@@ -119,6 +119,16 @@ public class ClientResponseWrapper implements ClientResponse {
 	}
 
 	@Override
+	public Mono<Void> releaseBody() {
+		return this.delegate.releaseBody();
+	}
+
+	@Override
+	public Mono<ResponseEntity<Void>> toBodilessEntity() {
+		return this.delegate.toBodilessEntity();
+	}
+
+	@Override
 	public <T> Mono<ResponseEntity<T>> toEntity(Class<T> bodyType) {
 		return this.delegate.toEntity(bodyType);
 	}
@@ -141,6 +151,11 @@ public class ClientResponseWrapper implements ClientResponse {
 	@Override
 	public Mono<WebClientResponseException> createException() {
 		return this.delegate.createException();
+	}
+
+	@Override
+	public String logPrefix() {
+		return this.delegate.logPrefix();
 	}
 
 	/**

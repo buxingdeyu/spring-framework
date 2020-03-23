@@ -20,6 +20,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -64,7 +65,7 @@ class ClassPathBeanDefinitionScannerJsr330ScopeIntegrationTests {
 
 
 	@BeforeEach
-	void setUp() {
+	void setup() {
 		this.oldRequestAttributes = new ServletRequestAttributes(new MockHttpServletRequest());
 		this.newRequestAttributes = new ServletRequestAttributes(new MockHttpServletRequest());
 
@@ -78,7 +79,7 @@ class ClassPathBeanDefinitionScannerJsr330ScopeIntegrationTests {
 	}
 
 	@AfterEach
-	void tearDown() throws Exception {
+	void reset() {
 		RequestContextHolder.setRequestAttributes(null);
 	}
 

@@ -19,10 +19,9 @@ package org.springframework.web.reactive.function.client
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.reactivestreams.Publisher
 import org.springframework.core.ParameterizedTypeReference
@@ -34,7 +33,6 @@ import java.util.concurrent.CompletableFuture
  *
  * @author Sebastien Deleuze
  */
-@ExperimentalCoroutinesApi
 class WebClientExtensionsTests {
 
 	private val requestBodySpec = mockk<WebClient.RequestBodySpec>(relaxed = true)
@@ -86,7 +84,7 @@ class WebClientExtensionsTests {
 		val response = mockk<ClientResponse>()
 		every { requestBodySpec.exchange() } returns Mono.just(response)
 		runBlocking {
-			assertEquals(response, requestBodySpec.awaitExchange())
+			assertThat(requestBodySpec.awaitExchange()).isEqualTo(response)
 		}
 	}
 
@@ -95,7 +93,7 @@ class WebClientExtensionsTests {
 		val spec = mockk<WebClient.ResponseSpec>()
 		every { spec.bodyToMono<String>() } returns Mono.just("foo")
 		runBlocking {
-			assertEquals("foo", spec.awaitBody<String>())
+			assertThat(spec.awaitBody<String>()).isEqualTo("foo")
 		}
 	}
 

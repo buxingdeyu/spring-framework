@@ -20,11 +20,10 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.core.task.NoOpRunnable;
-import org.springframework.tests.EnabledForTestGroups;
+import org.springframework.core.testfixture.EnabledForTestGroups;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
@@ -33,7 +32,7 @@ import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.springframework.tests.TestGroup.PERFORMANCE;
+import static org.springframework.core.testfixture.TestGroup.PERFORMANCE;
 
 /**
  * @author Rick Evans
@@ -142,8 +141,8 @@ public class ScheduledExecutorFactoryBeanTests {
 		verify(runnable, atLeast(2)).run();
 	}
 
-	@Disabled
 	@Test
+	@EnabledForTestGroups(PERFORMANCE)
 	public void testWithInitialDelayRepeatedExecutionIsSetUpAndFiresCorrectly() throws Exception {
 		Runnable runnable = mock(Runnable.class);
 
@@ -162,8 +161,8 @@ public class ScheduledExecutorFactoryBeanTests {
 		verify(runnable, never()).run();
 	}
 
-	@Disabled
 	@Test
+	@EnabledForTestGroups(PERFORMANCE)
 	public void testWithInitialDelayRepeatedExecutionIsSetUpAndFiresCorrectlyAfterException() throws Exception {
 		Runnable runnable = mock(Runnable.class);
 		willThrow(new IllegalStateException()).given(runnable).run();

@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 
 import org.springframework.core.ResolvableType;
+import org.springframework.core.testfixture.codec.AbstractEncoderTests;
 import org.springframework.util.MimeTypeUtils;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
@@ -34,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Sebastien Deleuze
  */
-class CharSequenceEncoderTests extends AbstractEncoderTestCase<CharSequenceEncoder> {
+class CharSequenceEncoderTests extends AbstractEncoderTests<CharSequenceEncoder> {
 
 	private final String foo = "foo";
 

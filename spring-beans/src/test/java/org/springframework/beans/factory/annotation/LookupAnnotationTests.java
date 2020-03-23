@@ -19,9 +19,10 @@ package org.springframework.beans.factory.annotation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.RootBeanDefinition;
-import org.springframework.tests.sample.beans.TestBean;
+import org.springframework.beans.testfixture.beans.TestBean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -36,7 +37,7 @@ public class LookupAnnotationTests {
 
 
 	@BeforeEach
-	public void setUp() {
+	public void setup() {
 		beanFactory = new DefaultListableBeanFactory();
 		AutowiredAnnotationBeanPostProcessor aabpp = new AutowiredAnnotationBeanPostProcessor();
 		aabpp.setBeanFactory(beanFactory);
@@ -44,7 +45,7 @@ public class LookupAnnotationTests {
 		beanFactory.registerBeanDefinition("abstractBean", new RootBeanDefinition(AbstractBean.class));
 		beanFactory.registerBeanDefinition("beanConsumer", new RootBeanDefinition(BeanConsumer.class));
 		RootBeanDefinition tbd = new RootBeanDefinition(TestBean.class);
-		tbd.setScope(RootBeanDefinition.SCOPE_PROTOTYPE);
+		tbd.setScope(BeanDefinition.SCOPE_PROTOTYPE);
 		beanFactory.registerBeanDefinition("testBean", tbd);
 	}
 
@@ -122,6 +123,7 @@ public class LookupAnnotationTests {
 		@Lookup
 		public abstract TestBean getTwoArguments(String name, int age);
 
+		// no @Lookup annotation
 		public abstract TestBean getThreeArguments(String name, int age, int anotherArg);
 	}
 

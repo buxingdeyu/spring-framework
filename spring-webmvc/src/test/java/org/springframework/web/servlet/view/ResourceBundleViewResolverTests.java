@@ -19,6 +19,7 @@ package org.springframework.web.servlet.view;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -27,10 +28,10 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.BeanIsAbstractException;
 import org.springframework.core.io.Resource;
-import org.springframework.mock.web.test.MockServletContext;
 import org.springframework.web.context.support.ServletContextResource;
 import org.springframework.web.context.support.StaticWebApplicationContext;
 import org.springframework.web.servlet.View;
+import org.springframework.web.testfixture.servlet.MockServletContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;

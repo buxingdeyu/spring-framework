@@ -18,6 +18,7 @@ package org.springframework.util.xml;
 
 import java.io.InputStream;
 import java.io.StringReader;
+
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -32,7 +33,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-class StaxEventXMLReaderTests extends AbstractStaxXMLReaderTestCase {
+class StaxEventXMLReaderTests extends AbstractStaxXMLReaderTests {
 
 	public static final String CONTENT = "<root xmlns='http://springframework.org/spring-ws'><child/></root>";
 

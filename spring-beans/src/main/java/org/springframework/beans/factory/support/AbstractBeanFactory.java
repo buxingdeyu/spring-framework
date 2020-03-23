@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -502,14 +502,13 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 * {@code ResolvableType})
 	 * @return {@code true} if the bean type matches, {@code false} if it
 	 * doesn't match or cannot be determined yet
-	 * @throws NoSuchBeanDefinitionException if there is no bean with the given
-	 * name
+	 * @throws NoSuchBeanDefinitionException if there is no bean with the given name
 	 * @since 5.2
 	 * @see #getBean
 	 * @see #getType
 	 */
-	boolean isTypeMatch(String name, ResolvableType typeToMatch,
-			boolean allowFactoryBeanInit) throws NoSuchBeanDefinitionException {
+	protected boolean isTypeMatch(String name, ResolvableType typeToMatch, boolean allowFactoryBeanInit)
+			throws NoSuchBeanDefinitionException {
 
 		String beanName = transformedBeanName(name);
 		boolean isFactoryDereference = BeanFactoryUtils.isFactoryDereference(name);
@@ -657,6 +656,12 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	@Override
 	@Nullable
 	public Class<?> getType(String name) throws NoSuchBeanDefinitionException {
+		return getType(name, true);
+	}
+
+	@Override
+	@Nullable
+	public Class<?> getType(String name, boolean allowFactoryBeanInit) throws NoSuchBeanDefinitionException {
 		String beanName = transformedBeanName(name);
 
 		// Check manually registered singletons.
@@ -696,7 +701,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		if (beanClass != null && FactoryBean.class.isAssignableFrom(beanClass)) {
 			if (!BeanFactoryUtils.isFactoryDereference(name)) {
 				// If it's a FactoryBean, we want to look at what it creates, not at the factory class.
-				return getTypeForFactoryBean(beanName, mbd, true).resolve();
+				return getTypeForFactoryBean(beanName, mbd, allowFactoryBeanInit).resolve();
 			}
 			else {
 				return beanClass;
@@ -720,8 +725,9 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			aliases.add(fullBeanName);
 		}
 		String[] retrievedAliases = super.getAliases(beanName);
+		String prefix = factoryPrefix ? FACTORY_BEAN_PREFIX : "";
 		for (String retrievedAlias : retrievedAliases) {
-			String alias = (factoryPrefix ? FACTORY_BEAN_PREFIX : "") + retrievedAlias;
+			String alias = prefix + retrievedAlias;
 			if (!alias.equals(name)) {
 				aliases.add(alias);
 			}
@@ -1312,7 +1318,6 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 			if (mbd == null || mbd.stale) {
 				previous = mbd;
-				mbd = null;
 				if (bd.getParentName() == null) {
 					// Use copy of given root bean definition.
 					if (bd instanceof RootBeanDefinition) {
@@ -1338,7 +1343,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 							else {
 								throw new NoSuchBeanDefinitionException(parentBeanName,
 										"Parent name '" + parentBeanName + "' is equal to bean name '" + beanName +
-										"': cannot be resolved without an AbstractBeanFactory parent");
+										"': cannot be resolved without a ConfigurableBeanFactory parent");
 							}
 						}
 					}
@@ -1353,7 +1358,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 				// Set default singleton scope, if not configured before.
 				if (!StringUtils.hasLength(mbd.getScope())) {
-					mbd.setScope(RootBeanDefinition.SCOPE_SINGLETON);
+					mbd.setScope(SCOPE_SINGLETON);
 				}
 
 				// A bean contained in a non-singleton bean cannot be a singleton itself.
@@ -1598,7 +1603,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		Boolean result = mbd.isFactoryBean;
 		if (result == null) {
 			Class<?> beanType = predictBeanType(beanName, mbd, FactoryBean.class);
-			result = beanType != null && FactoryBean.class.isAssignableFrom(beanType);
+			result = (beanType != null && FactoryBean.class.isAssignableFrom(beanType));
 			mbd.isFactoryBean = result;
 		}
 		return result;
@@ -1782,17 +1787,24 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			if (!(beanInstance instanceof FactoryBean)) {
 				throw new BeanIsNotAFactoryException(beanName, beanInstance.getClass());
 			}
+			if (mbd != null) {
+				mbd.isFactoryBean = true;
+			}
+			return beanInstance;
 		}
 
 		// Now we have the bean instance, which may be a normal bean or a FactoryBean.
 		// If it's a FactoryBean, we use it to create a bean instance, unless the
 		// caller actually wants a reference to the factory.
-		if (!(beanInstance instanceof FactoryBean) || BeanFactoryUtils.isFactoryDereference(name)) {
+		if (!(beanInstance instanceof FactoryBean)) {
 			return beanInstance;
 		}
 
 		Object object = null;
-		if (mbd == null) {
+		if (mbd != null) {
+			mbd.isFactoryBean = true;
+		}
+		else {
 			object = getCachedObjectForFactoryBean(beanName);
 		}
 		if (object == null) {

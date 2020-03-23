@@ -45,7 +45,8 @@ import reactor.test.StepVerifier;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.buffer.support.DataBufferTestUtils;
+import org.springframework.core.testfixture.io.buffer.AbstractDataBufferAllocatingTests;
+import org.springframework.core.testfixture.io.buffer.DataBufferTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -813,11 +814,25 @@ class DataBufferUtilsTests extends AbstractDataBufferAllocatingTests {
 		Mono<DataBuffer> result = DataBufferUtils.join(flux);
 
 		StepVerifier.create(result)
-				.consumeNextWith(dataBuffer -> {
-					assertThat(DataBufferTestUtils.dumpString(dataBuffer, StandardCharsets.UTF_8)).isEqualTo("foobarbaz");
-					release(dataBuffer);
+				.consumeNextWith(buf -> {
+					assertThat(DataBufferTestUtils.dumpString(buf, StandardCharsets.UTF_8)).isEqualTo("foobarbaz");
+					release(buf);
 				})
 				.verifyComplete();
+	}
+
+	@ParameterizedDataBufferAllocatingTest
+	void joinWithLimit(String displayName, DataBufferFactory bufferFactory) {
+		super.bufferFactory = bufferFactory;
+
+		DataBuffer foo = stringBuffer("foo");
+		DataBuffer bar = stringBuffer("bar");
+		DataBuffer baz = stringBuffer("baz");
+		Flux<DataBuffer> flux = Flux.just(foo, bar, baz);
+		Mono<DataBuffer> result = DataBufferUtils.join(flux, 8);
+
+		StepVerifier.create(result)
+				.verifyError(DataBufferLimitException.class);
 	}
 
 	@ParameterizedDataBufferAllocatingTest
